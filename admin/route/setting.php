@@ -2,104 +2,109 @@
 
 !defined('DEBUG') AND exit('Access Denied.');
 
-include './xiunophp/form.func.php';
-
 $action = param(1);
+
+include _include(APP_PATH.'model/smtp.func.php');
+smtp_init(APP_PATH.'conf/smtp.conf.php');
+
+// hook admin_setting_start.php
 
 if($action == 'base') {
 	
-	$conffile = './conf/conf.php';
-	$readable = is_writeable($conffile);
+	// hook admin_setting_base_get_post.php
 	
 	if($method == 'GET') {
+		
+		// hook admin_setting_base_get_start.php
 		
 		$input = array();
 		$input['sitename'] = form_text('sitename', $conf['sitename']);
-		$input['runlevel'] = form_radio('runlevel', array(0=>'站点关闭', 1=>'管理员可读写', 2=>'会员可读', 3=>'会员可读写', 4=>'所有人只读', 5=>'所有人可读写'), $conf['runlevel']);
+		$input['sitebrief'] = form_textarea('sitebrief', $conf['sitebrief'], '100%', 100);
+		$input['runlevel'] = form_radio('runlevel', array(0=>lang('runlevel_0'), 1=>lang('runlevel_1'), 2=>lang('runlevel_2'), 3=>lang('runlevel_3'), 4=>lang('runlevel_4'), 5=>lang('runlevel_5')), $conf['runlevel']);
+		$input['user_create_email_on'] = form_radio_yes_no('user_create_email_on', $conf['user_create_email_on']);
+		$input['user_resetpw_on'] = form_radio_yes_no('user_resetpw_on', $conf['user_resetpw_on']);
+		$input['lang'] = form_select('lang', array('zh-cn'=>lang('lang_zh_cn'), 'zh-tw'=>lang('lang_zh_tw'), 'en-us'=>lang('lang_en_us')), $conf['lang']);
 		
-		$setting = kv_get('setting');	// 首页数据
-		empty($setting) AND $setting = array('sitebrief'=>'', 'seo_title'=>'', 'seo_keywords'=>'', 'seo_description'=>'', 'footer_code'=>'');
-		$sitebrief = $setting['sitebrief']; // 站点介绍
+		$header['title'] = lang('admin_site_setting');
+		$header['mobile_title'] =lang('admin_site_setting');
 		
-		$input['seo_title'] = form_text('seo_title', $setting['seo_title'], '100%');
-		$input['seo_keywords'] = form_text('seo_keywords', $setting['seo_keywords'], '100%');
-		$input['seo_description'] = form_text('seo_description', $setting['seo_description'], '100%');
-		$input['footer_code'] = form_textarea('footer_code', $setting['footer_code'], '100%', '50px');
+		// hook admin_setting_base_get_end.php
 		
-		include './admin/view/setting.htm';
+		include _include(ADMIN_PATH.'view/htm/setting_base.htm');
 		
 	} else {
-	
+		
 		$sitebrief = param('sitebrief', '', FALSE);
-		$seo_title = param('seo_title', '', FALSE);
-		$seo_keywords = param('seo_keywords', '', FALSE);
-		$seo_description = param('seo_description', '', FALSE);
-		$footer_code = param('footer_code', '', FALSE);
-		$setting = array('sitebrief'=>$sitebrief, 'seo_title'=>$seo_title, 'seo_keywords'=>$seo_keywords, 'seo_description'=>$seo_description, 'footer_code'=>$footer_code);
-		kv_set('setting', $setting);
-		cache_delete('setting');
-		
-		empty($readable) AND message(-1, '配置文件 conf/conf.php 不可写，请手工修改。');
-		
 		$sitename = param('sitename', '', FALSE);
-		
 		$runlevel = param('runlevel', 0);
+		$user_create_email_on = param('user_create_email_on', 0);
+		$user_resetpw_on = param('user_resetpw_on', 0);
+		$_lang = param('lang');
 		
-		$conf['sitename'] = $sitename;
-		$conf['runlevel'] = $runlevel;
+		// hook admin_setting_base_post_start.php
 		
-		conf_save();
+		$replace = array();
+		$replace['sitename'] = $sitename;
+		$replace['sitebrief'] = $sitebrief;
+		$replace['runlevel'] = $runlevel;
+		$replace['user_create_email_on'] = $user_create_email_on;
+		$replace['user_resetpw_on'] = $user_resetpw_on;
+		$replace['lang'] = $_lang;
+		
+		file_replace_var(APP_PATH.'conf/conf.php', $replace);
 	
-		message(0, '修改成功');
+		// hook admin_setting_base_post_end.php
+		
+		message(0, lang('modify_successfully'));
 	}
-	
-	/*
+
 } elseif($action == 'smtp') {
+
+	// hook admin_setting_smtp_get_post.php
 	
 	if($method == 'GET') {
-		$mailconf = kv_get('smtp');
 		
-		$sendtype = &$mailconf['sendtype'];
-		$smtplist = &$mailconf['smtplist'];
+		// hook admin_setting_smtp_get_start.php
 		
-		$input = array();
-		$input['sendtype'] = form::get_radio('sendtype', array(0=>'PHP内置mail函数 ', 1=>'SMTP 方式'), $sendtype);
+		$header['title'] = lang('admin_setting_smtp');
+		$header['mobile_title'] = lang('admin_setting_smtp');
+	
+		$smtplist = smtp_find();
+		$maxid = smtp_maxid();
 		
-		$this->view->assign('error', $error);
-		$this->view->assign('smtplist', $smtplist);
-		$this->view->assign('input', $input);
+		// hook admin_setting_smtp_get_end.php
 		
-		// hook admin_conf_mail_view_before.php
-		
-		$this->view->display('conf_mail.htm');
+		include _include(ADMIN_PATH."view/htm/setting_smtp.htm");
+	
 	} else {
+		
+		// hook admin_setting_smtp_post_start.php
+		
 		$email = param('email', array(''));
 		$host = param('host', array(''));
-		$port = param('port', array(''));
+		$port = param('port', array(0));
 		$user = param('user', array(''));
 		$pass = param('pass', array(''));
-		$delete = param('delete', array(''));
-		$sendtype = param('sendtype', array(''));
+		
 		$smtplist = array();
-		foreach($email as $k=>$v) {
-			empty($port[$k]) && $port[$k] = 25;
-			if(in_array($k, $delete)) continue;
-			if(empty($email[$k]) || empty($host[$k]) || empty($user[$k])) continue;
-			$smtplist[$k] = array('email'=>$email[$k], 'host'=>$host[$k], 'port'=>$port[$k], 'user'=>$user[$k], 'pass'=>$pass[$k]);
+		foreach ($email as $k=>$v) {
+			$smtplist[$k] = array(
+				'email'=>$email[$k],
+				'host'=>$host[$k],
+				'port'=>$port[$k],
+				'user'=>$user[$k],
+				'pass'=>$pass[$k],
+			);
 		}
+		$r = file_put_contents_try(APP_PATH.'conf/smtp.conf.php', "<?php\r\nreturn ".var_export($smtplist,true).";\r\n?>");
+		!$r AND message(-1, lang('conf/smtp.conf.php', array('file'=>'conf/smtp.conf.php')));
 		
-		kv_set('mail_conf', $mailconf);
+		// hook admin_setting_smtp_post_end.php
 		
-		$mail_smtplist = $smtplist;
-		
+		message(0, lang('save_successfully'));
 	}
-	$error = array();
-		
-		*/
-		
-} elseif($action == 'create') {
-
-
 }
+
+// hook admin_setting_end.php
 
 ?>

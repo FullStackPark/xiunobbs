@@ -1,10 +1,12 @@
 <?php
 
-$g_runtime_save = 0;
+// hook model_runtime_start.php
+
 function runtime_init() {
+	// hook model_runtime_init_start.php
 	global $conf;
 	$runtime = cache_get('runtime'); // 实时运行的数据，初始化！
-	if($runtime === NULL || !isset($runtime['users']) || !isset($runtime['onlines'])) {
+	if($runtime === NULL || !isset($runtime['users'])) {
 		$runtime = array();
 		$runtime['users'] = user_count();
 		$runtime['posts'] = post_count();
@@ -14,63 +16,67 @@ function runtime_init() {
 		$runtime['todayposts'] = 0;
 		$runtime['todaythreads'] = 0;
 		$runtime['onlines'] = max(1, online_count());
+		$runtime['cron_1_last_date'] = 0;
+		$runtime['cron_2_last_date'] = 0;
 		
-		// runtime_append
-		$arr = kv_get('runtime_append');
-		is_array($arr) AND $runtime += $arr;
-		
-		cache_set('runtime', $runtime, TRUE);
+		cache_set('runtime', $runtime);
 		
 	}
+	// hook model_runtime_init_end.php
 	return $runtime;
 }
 
 function runtime_get($k) {
+	// hook model_runtime_get_start.php
 	global $runtime;
-	return array_value($runtime, $k, FALSE);
+	// hook model_runtime_get_end.php
+	return array_value($runtime, $k, NULL);
 }
 
-function runtime_set($k, $v, $save = FALSE) {
-	global $conf, $runtime, $g_runtime_save;
+function runtime_set($k, $v) {
+	// hook model_runtime_set_start.php
+	global $conf, $runtime;
 	$op = substr($k, -1);
 	if($op == '+' || $op == '-') {
 		$k = substr($k, 0, -1);
-		!isset($runtime[$k]) AND $runtime[$k] = '';
+		!isset($runtime[$k]) AND $runtime[$k] = 0;
 		$v = $op == '+' ? ($runtime[$k] + $v) : ($runtime[$k] - $v);
 	}
 	
-	$default_keys = array('users', 'posts', 'threads', 'todayusers', 'todayposts', 'todaythreads', 'onlines');
-	if(!in_array($k, $default_keys)) {
-		runtime_append($k, $v);
-	}
 	$runtime[$k] = $v;
-	if($save) {
-		return cache_set('runtime', $runtime);
-	} else {
-		$g_runtime_save = 1;
-		return TRUE;
-	}
+	return TRUE;
+	// hook model_runtime_set_end.php
 }
 
-// 追加 runtime，用来初始化
-function runtime_append($k, $v) {
-	$arr = kv_get('runtime_append');
-	empty($arr) AND $arr = array();
-	$arr[$k] = $v;
-	kv_set('runtime_append', $arr);
+function runtime_delete($k) {
+	// hook model_runtime_delete_start.php
+	global $conf, $runtime;
+	unset($runtime[$k]);
+	runtime_save();
+	return TRUE;
+	// hook model_runtime_delete_end.php
 }
 
 function runtime_save() {
-	global $runtime, $g_runtime_save;
+	// hook model_runtime_save_start.php
+	global $runtime;
 	
-	if(!$g_runtime_save) return;
+	function_exists('chdir') AND chdir(APP_PATH);
+	
 	$r = cache_set('runtime', $runtime);
 	
+	// hook model_runtime_save_end.php
 }
 
 function runtime_truncate() {
+	// hook model_runtime_truncate_start.php
 	global $conf;
 	cache_delete('runtime');
+	// hook model_runtime_truncate_end.php
 }
+
+register_shutdown_function('runtime_save');
+
+// hook model_runtime_end.php
 
 ?>

@@ -1,52 +1,43 @@
 <?php
 
-chdir('./');
+exit; // 如果要使用请注释掉该行
 
-define('DEBUG', 0);
-define('APP_NAME', 'bbs');
+// 跳过路由
+define('SKIP_ROUTE', TRUE);
 
-define('IN_SAE', class_exists('SaeKV'));
+include '../index.php';
 
-$conf = (@include './conf/conf.php');
+$fid = 1;	// 版块 id
+$uid = 1;	// 用户 id
+$gid = 1;	// 用户组 id; 1: 管理员; 101:普通用户
 
-// 支持 SAE
-IN_SAE AND include './conf/sae.conf.php';
-include './xiunophp/xiunophp.php';
-include './model.inc.php';
-
-$browser = get__browser();
-check_browser($browser);
-
-runtime_init();
-online_init();
-for($i=1; $i<1000; $i++) {
-	$subject = '欢迎使用 Xiuno BBS 3.0 新一代论坛系统。'.$i;
+for($i=1; $i<10; $i++) {
+	$subject = '欢迎使用 Xiuno BBS 4.0 新一代论坛系统。'.$i;
 	$message = '祝您使用愉快！';
 	$thread = array(
-		'fid'=>1,
-		'uid'=>1,
+		'fid'=>$fid,
+		'uid'=>$uid,
 		'subject'=>$subject,
+		'doctype'=>0,
 		'message'=>$message,
-		'seo_url'=>'',
 		'time'=>$time,
 		'longip'=>$longip,
 	);
-	$tid = thread_create($thread, $longip);
+	$tid = thread_create($thread, $firstpid);
 	for($j=0; $j<10; $j++) {
 		$post = array(
 			'tid'=>$tid,
-			'uid'=>1,
+			'uid'=>$uid,
 			'create_date'=>$time,
 			'userip'=>$longip,
 			'isfirst'=>0,
-			'message'=>$message.rand(1, 10000),
+			'doctype'=>0,
+			'message'=>$message.$j,
 		);
-		$pid = post_create($post, 1);
+		$pid = post_create($post, $fid, $gid);
 	}
 	if($i % 100 == 0) echo '.';
 }
-
-cron_run(1);
 
 echo '生成数据完毕';
 

@@ -1,5 +1,3 @@
 User-agent: *
 Disallow: /admin
-Disallow: /mobile
 Disallow: /user-*
-Disallow: /agree-*

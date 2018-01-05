@@ -1,78 +1,131 @@
-	<?php
+<?php
 
 !defined('DEBUG') AND exit('Access Denied.');
 
 $action = param(1);
 
-if($action == 'list') {
+$system_group = array(0, 1, 2, 3, 4, 5, 6, 7, 101);
 
-	$header['title']    = '用户组管理';
+// hook admin_group_start.php
 
-	$grouplist = group_find();
-	$maxgid = group_maxid();
+if(empty($action) || $action == 'list') {
 	
-	include "./admin/view/group_list.htm";
-
-// 用户组更新
-} elseif($action == 'create') {
-	
-	$gid = param(2, 0);
-	$group = group_read($gid);
-	$group AND message(-1, '用户组已经存在!');
-	
-	$name = param('name');
-	$agreesfrom = param('agreesfrom', 0);
-	$agreesto = param('agreesto', 0);
-	$maxagrees = param('maxagrees', 0);
-	
-	empty($name) AND message(1, '用户组名称不能为空');
-	
-	$arr = array(
-		'gid'        => $gid,
-		'name'       => $name,
-		'agreesfrom' => $agreesfrom,
-		'agreesto'   => $agreesto,
-		'maxagrees'  => $maxagrees,
-	);
-	
-	$r = group_create($arr);
-	$r !== FALSE ? message(0, '创建成功') : message(-1, '创建失败');
-	
-// 用户组更新
-} elseif($action == 'update') {
-
-	$gid = param(2, 0);
-	$group = group_read($gid);
+	// hook admin_group_list_get_post.php
 	
 	if($method == 'GET') {
-
-		empty($group) AND message(1, '用户组不存在');
+		
+		// hook admin_group_list_get_start.php
+		
+		$header['title']        = lang('group_admin');
+		$header['mobile_title'] = lang('group_admin');
+		
+		$maxgid = group_maxid();
+		
+		// hook admin_group_list_get_end.php
+		
+		include _include(ADMIN_PATH."view/htm/group_list.htm");
 	
-		include './admin/view/group_update.htm';
-	} else {
-		// 两种情况的提交 list/update
+	} elseif($method == 'POST') {
+		
+		$gidarr = param('_gid', array(0));
+		$namearr = param('name', array(''));
+		$creditsfromarr = param('creditsfrom', array(0));
+		$creditstoarr = param('creditsto', array(0));
+		$arrlist = array();
+		
+		// hook admin_group_list_post_start.php
+		
+		foreach ($gidarr as $k=>$v) {
+			$arr = array(
+				'gid'=>$k,
+				'name'=>$namearr[$k],
+				'creditsfrom'=>$creditsfromarr[$k],
+				'creditsto'=>$creditstoarr[$k],
+			);
+			if(!isset($grouplist[$k])) {
+				// 添加 / add
+				group_create($arr);
+			} else {
+				// 编辑 / edit
+				group_update($k, $arr);
+			}
+		}
+		
+		// 删除 / delete
+		$deletearr = array_diff_key($grouplist, $gidarr);
+		foreach($deletearr as $k=>$v) {
+			if(in_array($k, $system_group)) continue;
+			group_delete($k);
+		}
+		
+		group_list_cache_delete();
+		
+		// hook admin_group_list_post_end.php
+		
+		message(0, lang('save_successfully'));
+	}
+
+} elseif($action == 'update') {
+	
+	$_gid = param(2, 0);
+	$_group = group_read($_gid);
+	empty($_group) AND message(-1, lang('group_not_exists'));
+	
+	// hook admin_group_update_get_post.php
+	
+	if($method == 'GET') {
+		
+		// hook admin_group_update_get_start.php
+		
+		$header['title']        = lang('group_admin');
+		$header['mobile_title'] = lang('group_admin');
+		
+		$input = array();
+		$input['name'] = form_text('name', $_group['name']);
+		$input['creditsfrom'] = form_text('creditsfrom', $_group['creditsfrom']);
+		$input['creditsto'] = form_text('creditsto', $_group['creditsto']);
+		$input['allowread'] = form_checkbox('allowread', $_group['allowread']);
+		$input['allowthread'] = form_checkbox('allowthread', $_group['allowthread'] && $_gid != 0);
+		$input['allowpost'] = form_checkbox('allowpost', $_group['allowpost'] && $_gid != 0);
+		$input['allowattach'] = form_checkbox('allowattach', $_group['allowattach'] && $_gid != 0);
+		$input['allowdown'] = form_checkbox('allowdown', $_group['allowdown']);
+		$input['allowtop'] = form_checkbox('allowtop', $_group['allowtop']);
+		$input['allowupdate'] = form_checkbox('allowupdate', $_group['allowupdate']);
+		$input['allowdelete'] = form_checkbox('allowdelete', $_group['allowdelete']);
+		$input['allowmove'] = form_checkbox('allowmove', $_group['allowmove']);
+		$input['allowbanuser'] = form_checkbox('allowbanuser', $_group['allowbanuser']);
+		$input['allowdeleteuser'] = form_checkbox('allowdeleteuser', $_group['allowdeleteuser']);
+		$input['allowviewip'] = form_checkbox('allowviewip', $_group['allowviewip']);
+		
+		// hook admin_group_update_get_end.php
+		
+		include _include(ADMIN_PATH."view/htm/group_update.htm");
+	
+	} elseif($method == 'POST') {	
+		
 		$name = param('name');
-		$agreesfrom = param('agreesfrom', 0);
-		$agreesto = param('agreesto', 0);
-		$maxagrees = param('maxagrees', 0);
+		$creditsfrom = param('creditsfrom');
+		$creditsto = param('creditsto');
+		$allowread = param('allowread', 0);
+		$allowthread = param('allowthread', 0);
+		$allowpost = param('allowpost', 0);
+		$allowattach = param('allowattach', 0);
+		$allowdown = param('allowdown', 0);
 		
-		// 标示是不是更新详情
-		$detail = param(3);
+		// hook admin_group_update_post_start.php
 		
-		$arr = array(
-			'gid'        => $gid,
+		$arr = array (
 			'name'       => $name,
-			'agreesfrom' => $agreesfrom,
-			'agreesto'   => $agreesto,
-			'maxagrees'  => $maxagrees,
+			'creditsfrom' => $creditsfrom,
+			'creditsto'   => $creditsto,
+			'allowread'  => $allowread,
+			'allowthread'  => $allowthread,
+			'allowpost'  => $allowpost,
+			'allowattach'  => $allowattach,
+			'allowdown'  => $allowdown,
+			
 		);
-		if($detail == 'detail') {
-			$allowread = param('allowread', 0);
-			$allowthread = param('allowthread', 0);
-			$allowpost = param('allowpost', 0);
-			$allowattach = param('allowattach', 0);
-			$allowdown = param('allowdown', 0);
-			$allowagree = param('allowagree', 0);
+		if($_gid >=1 && $_gid <= 5) {
 			
 			$allowtop = param('allowtop', 0);
 			$allowupdate = param('allowupdate', 0);
@@ -81,46 +134,25 @@ if($action == 'list') {
 			$allowbanuser = param('allowbanuser', 0);
 			$allowdeleteuser = param('allowdeleteuser', 0);
 			$allowviewip = param('allowviewip', 0);
-			$allowcustomurl = param('allowcustomurl', 0);
-			
-			$arr2 = array(
-				'allowread'  => $allowread,
-				'allowthread'  => $allowthread,
-				'allowpost'  => $allowpost,
-				'allowattach'  => $allowattach,
-				'allowdown'  => $allowdown,
-				'allowagree'  => $allowagree,
-				
+			$arr += array(
 				'allowtop'  => $allowtop,
 				'allowupdate'  => $allowupdate,
 				'allowdelete'  => $allowdelete,
 				'allowmove'  => $allowmove,
 				'allowbanuser'  => $allowbanuser,
 				'allowdeleteuser'  => $allowdeleteuser,
-				'allowviewip'  => $allowviewip,
-				'allowcustomurl'  => $allowcustomurl,
+				'allowviewip'  => $allowviewip
 			);
-			$arr += $arr2;
 		}
+		group_update($_gid, $arr);
 		
-		// 更新
-		$r = group_update($gid, $arr);
-		$r !== FALSE ? message(0, '更新成功') : message(-1, '更新失败');
+		// hook admin_group_update_post_end.php
+		
+		message(0, lang('edit_sucessfully'));	
 	}
 	
-
-} elseif($action == 'delete') {
-
-	if($method != 'POST') message(-1, 'Method Error.');
-	
-	$gid = param(2, 0);
-	$group = group_read($gid);
-	empty($group) AND message(1, '用户组不存在');
-	
-	$gid <= 101 AND message(-1, '该用户组不允许删除！');
-	$r = group_delete($gid);
-	$r !== FALSE ? message(0, '删除成功') : message(1, '删除失败');
-
 }
+
+// hook admin_group_start.php
 
 ?>

@@ -1273,13 +1273,13 @@ class XML_HTMLSax3 {
     }
 }
 
-// class HTML_White �?axiuno@gmail.com 编写�?// 技术支持：http://www.xiuno.com/
+// class HTML_White by axiuno@gmail.com http://bbs.xiuno.com/
 class HTML_White {
         private $_stack = array();	//
         private $_dcStack = array();	// 删除的栈
         private $_dcCounter = array();	// 删除的标签数
         private $_xhtml = '';
-        private $_counter = '';		 // 打开的标签数
+        private $_counter = array();		 // 打开的标签数
         private $tableTags = array('caption', 'col', 'colgroup', 'tbody', 'td', 'tfoot', 'th', 'thead',   'tr');
         private $closeParagraph = array(
 	        'address', 'blockquote', 'center', 'dd',      'dir',       'div',
@@ -1299,11 +1299,13 @@ class HTML_White {
         private $white_tag = array();
         private $white_css = array();
         private $white_value = array();
+        private $args = array();
 
-        function __construct($white_tag, $white_value, $white_css) {
+        function __construct($white_tag, $white_value, $white_css, $args) {
 	        $this->white_tag = $white_tag;
 	        $this->white_css = $white_css;
 	        $this->white_value = $white_value;
+	        $this->args = $args;
         }
 
         public function parse($doc) {
@@ -1317,7 +1319,10 @@ class HTML_White {
 		$doc = str_replace("\xC0\xBC", '&lt;', $doc);
 
 		// UTF-7 encoding ASCII decode
-		$doc = $this->repackUTF7($doc);
+		// $doc = $this->repackUTF7($doc);
+		
+		// 过滤泰文, Filter Thai Character
+		$doc = preg_replace('/\p{Thai}/u', '', $doc);
 
 		// Instantiate the parser
 		$parser = new XML_HTMLSax3();
@@ -1341,7 +1346,8 @@ class HTML_White {
 		return $this->_xhtml;
 	}
 
-       private function _writeAttrs($attrs) {
+        // 过滤属性
+       private function _writeAttrs($attrs, $tagname) {
         	if(!is_array($attrs)) {
         	 	return true;
         	}
@@ -1377,7 +1383,13 @@ class HTML_White {
 						if($cssvalue < $v[2][0] || $cssvalue > $v[2][1]) {
 							$cssvalue = $v[1];
 						}
-						if($px) $cssvalue .= 'px';
+						// 如果为 table，转换为百分比，参考值可以通过参数控制。
+						if($cssname == 'width' || $cssname == 'min-width') {
+							$px AND $cssvalue > $this->args['table_max_width'] AND $cssvalue = '100%';
+							$px = 0;
+						}
+						$px AND $cssvalue .= 'px';
+						
 					} elseif($v[0] == 'list') {
 						if(!in_array($cssvalue, $v[2])) $cssvalue = $v[1];
 					} elseif($v[0] == 'pcre') {
@@ -1398,7 +1410,7 @@ class HTML_White {
 				}
 				$value = substr($value, 0, -1);
 
-			// 过滤危险�?embed src=
+			// 过滤危险 iframe / embed src=
 	               } elseif($name == 'src') {
 	              	 	$v = $this->white_value[$name];
 	              	 	$ok = 0;
@@ -1408,24 +1420,18 @@ class HTML_White {
 					}
 				}
 
-				$tag = array_pop($this->_stack);
-				array_push($this->_stack, $tag);
-	               		if($tag == 'embed') {
+				//$tag = array_pop($this->_stack);
+				//array_push($this->_stack, $tag);
+	               		if($tagname == 'embed' || $tagname == 'iframe') {
 	               			//  && strpos($value, '.swf') !== FALSE
-	               			$safearr = array('youku.com', '56.com', 'ku6.com', 'tudou.com', 'joy.cn', 'sina.com.cn', 'ifeng.com', 'qq.com', 'sohu.com', 'iqiyi.com', 'qiyi.com');
-	               			$arr = parse_url($value);
-	               			$hostarr = explode('.', $host);
-	               			if(count($hostarr) > 2) {
-	               				$hostarr = array_slice($hostarr, -2);
-	               			}
-	               			$host = implode('.', $hostarr);
-	               			if(!in_array($host, $safearr)) {
-	               				$value = 'http://cloud.xiuno.net/check-url.htm?url='.urlencode($value);
+	               			// 'http://player.youku.com/embed/'+matches[1];
+	               			if(!preg_match('#^http://player\.youku\.com/embed/[\w=]+$#i', $value)) {
+	               				$value = '';
 	               			}
 	               		}
 	               		$value = $ok ? $value : $v[1];
 	                // 白名单	                
-			} elseif(isset($this->white_value[$name]))  {
+	                } elseif(isset($this->white_value[$name]))  {
 	                	$v = $this->white_value[$name];
         			if($v[0] == 'range') {
         				$px = 0;
@@ -1481,6 +1487,7 @@ class HTML_White {
 	public function _openHandler(&$parser, $name, $attrs) {
 		$name = strtolower($name);
 
+		// 删除标签和内容
 		if(!in_array($name, $this->white_tag)) {
 			array_push($this->_dcStack, $name);
 			$this->_dcCounter[$name] = isset($this->_dcCounter[$name]) ? $this->_dcCounter[$name]+1 : 1;
@@ -1492,7 +1499,7 @@ class HTML_White {
 
 		if (in_array($name, $this->singleTags)) {
 			$this->_xhtml .= '<' . $name;
-			$this->_writeAttrs($attrs);
+			$this->_writeAttrs($attrs, $name);
 			$this->_xhtml .= ' />';
 			return true;
 		}
@@ -1523,7 +1530,7 @@ class HTML_White {
 		}
 
 		$this->_xhtml .= '<' . $name;
-		$this->_writeAttrs($attrs);
+		$this->_writeAttrs($attrs, $name);
 		$this->_xhtml .= '>';
 		array_push($this->_stack, $name);
 		$this->_counter[$name] = isset($this->_counter[$name]) ? $this->_counter[$name]+1 : 1;
@@ -1599,15 +1606,17 @@ class HTML_White {
 }
 
 // class xn_html_safe 由 axiuno@gmail.com 编写
-function xn_html_safe($doc) {
+function xn_html_safe($doc, $arg = array()) {
+	empty($arg['table_max_width']) AND $arg['table_max_width'] = 746; // 这个宽度为 bbs 回帖宽度
 	$pattern = array (
-		'img_url'=>'#^(https?://[^\'"\\\\<>:\s]+(:\d+)?)?([^\'"\\\\<>:\s]+?)*$#is',
-		'url'=>'#^(https?://[^\'"\\\\<>:\s]+(:\d+)?)?([^\'"\\\\<>:\s]+?)*$#is',
+		//'img_url'=>'#^(https?://[^\'"\\\\<>:\s]+(:\d+)?)?([^\'"\\\\<>:\s]+?)*$#is',
+		'img_url'=>'#^(((https?://[^\'"\\\\<>:\s]+(:\d+)?)?([^\'"\\\\<>:\s]+?)*)|(data:image/png;base64,[\w\/+]+))$#is',
+		'url'=>'#^(https?://[^\'"\\\\<>:\s]+(:\d+)?)?([^\'"\\\\<>:\s]+?)*$#is', // '#https?://[\w\-/%?.=]+#is'
 		'mailto'=>'#^mailto:([\w%\-\.]+)@([\w%\-\.]+)(\.[\w%\-\.]+?)+$#is',
 		'ftp_url'=>'#^ftp:([\w%\-\.]+)@([\w%\-\.]+)(\.[\w%\-\.]+?)+$#is',
 		'ed2k_url'=>'#^(?:ed2k|thunder|qvod|magnet)://[^\s\'\"\\\\<>]+$#is',
 		'color'=>'#^(\#\w{3,6})|(rgb\(\d+,\s*\d+,\s*\d+\)|(\w{3,10}))$#is',
-		'safe'=>'#^[\w\-\:\.\s\x7f-\xff]+$#is',
+		'safe'=>'#^[\w\-:;\.\s\x7f-\xff]+$#is',
 		'css'=>'#^[\(,\)\#;\w\-\.\s\x7f-\xff]+$#is',
 		'word'=>'#^[\w\-\x7f-\xff]+$#is',
 	);
@@ -1616,7 +1625,7 @@ function xn_html_safe($doc) {
 		'table', 'tr', 'td', 'th', 'tbody', 'thead', 'tfoot','caption',
 		'ol', 'ul', 'li', 'dl', 'dt', 'dd', 'menu', 'multicol',
 		'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'p', 'div', 'pre',
-		'br', 'img', 'area',  'embed', 'code', 'blockquote'
+		'br', 'img', 'area',  'embed', 'code', 'blockquote', 'iframe', 'section', 'fieldset', 'legend'
 	);
 	$white_value = array(
 		'href'=>array('pcre', '', array($pattern['url'], $pattern['ed2k_url'])),
@@ -1630,6 +1639,7 @@ function xn_html_safe($doc) {
 		'face'=>array('pcre', '', array($pattern['word'])),
 		'color'=>array('pcre', '', array($pattern['color'])),
 		'alt'=>array('pcre', '', array($pattern['safe'])),
+		'label'=>array('pcre', '', array($pattern['safe'])),
 		'title'=>array('pcre', '', array($pattern['safe'])),
 		'target'=>array('list', '_self', array('_blank', '_self')),
 		'type'=>array('pcre', '', array('#^[\w/\-]+$#')),
@@ -1640,15 +1650,17 @@ function xn_html_safe($doc) {
 		'cellspacing'=>array('range', 0, array(0, 10)),
 		'cellpadding'=>array('range', 0, array(0, 10)),
 		'frameborder'=>array('range', 0, array(0, 10)),
+		'allowfullscreen'=>array('range', 0, array(0, 10)),
 		'align'=>array('list', 'left', array('left', 'center', 'right')),
 		'valign'=>array('list', 'middle', array('middle', 'top', 'bottom')),
+        'name'=>array('pcre', '', array($pattern['word'])),
 	);
 	$white_css = array(
 		'font'=>array('pcre', 'none', array($pattern['safe'])),
 		'font-style'=>array('pcre', 'none', array($pattern['safe'])),
 		'font-weight'=>array('pcre', 'none', array($pattern['safe'])),
 		'font-family'=>array('pcre', 'none', array($pattern['word'])),
-		'font-size'=>array('range', 9, array(6, 26)),
+		'font-size'=>array('range', 12, array(6, 48)),
 		'width'=>array('range', '100%', array(1, 1800)),
 		'height'=>array('range', '', array(1, 80000)),
 		'min-width'=>array('range', 1, array(1, 80000)),
@@ -1704,10 +1716,21 @@ function xn_html_safe($doc) {
 		*/
 		
 	);
-	$safehtml = new HTML_White($white_tag, $white_value, $white_css);
+	$safehtml = new HTML_White($white_tag, $white_value, $white_css, $arg);
 	$result = $safehtml->parse($doc);
 	return $result;
 }
+
+// echo xn_html_safe('+ab-');
+
+// 最大宽度限制
+//$s = '<table class="table" style="width:1126px; margin-bottom:1rem; color:rgb(55, 58, 60); font-family:none; line-height:24px; min-width:800px; background-color:rgb(255, 255, 255);"><tbody><tr valign="top"><td width="60" style="padding:0.5rem 0.75rem;"><a href="http://plugin.xiuno.com/plugin-read-xn_syntax_hightlighter.htm" target="_blank"><img src="http://plugin.xiuno.com/upload/plugin/27/icon.png" width="54" height="54"></a></td><td width="220" style="padding:0.5rem 0.75rem;"><a href="http://plugin.xiuno.com/plugin-read-xn_syntax_hightlighter.htm"><span style="font-weight:bolder;">代码高亮&nbsp;</span></a><span class="small" style="font-size:13px;">v1.1&nbsp;</span><br><span class="small" style="font-size:13px;">xn_syntax_hightlighter</span><br><span class="small" style="font-size:13px;">作者：axiuno</span></td></tr></tbody></table>';
+//echo xn_html_safe($s);
+
+/*
+$s = '<div><p align="center"><iframe width="800" height="600" src="http://player.yoduku.com/embed/XMTY5NjY0NTM5Mg==" frameborder="0" allowfullscreen="1"></iframe></p></div>';
+echo xn_html_safe($s);
+*/
 
 /*
 
@@ -1728,7 +1751,5 @@ echo xn_html_safe($s);
 </table>
 
 */
-
-
 
 ?>

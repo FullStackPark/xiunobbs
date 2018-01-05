@@ -4,151 +4,188 @@
 
 $action = param(1);
 
-if($action == 'list') {
+// hook admin_user_start.php
 
-	$header['title']    = '用户管理';
+if(empty($action) || $action == 'list') {
 
+	$header['title'] = lang('user_admin');
+	$header['mobile_title'] = lang('user_admin');
+		
 	$pagesize = 20;
 	$srchtype = param(2);
-	$keyword  = trim(urldecode(param(3)));
-	$page     = param(4, 0);
+	$keyword  = trim(xn_urldecode(param(3)));
+	$page     = param(4, 1);
 
+	// hook admin_user_list_start.php
+	
 	$cond = array();
 	if($keyword) {
-		!in_array($srchtype, array('uid', 'username', 'mobile', 'email', 'gid', 'create_ip')) AND $srchtype = 'uid';
+		!in_array($srchtype, array('uid', 'username', 'email', 'gid', 'create_ip')) AND $srchtype = 'uid';
 		$cond[$srchtype] = $srchtype == 'create_ip' ? ip2long($keyword) : $keyword; 
 	}
 
 	$n = user_count($cond);
-	$page = page($page, $n, $pagesize);
 	$userlist = user_find($cond, array('uid'=>-1), $page, $pagesize);
-	$pagehtml = pages("admin/user-list-$srchtype-".urlencode($keyword).'-{page}.htm', $n, $page, $pagesize);
+	$pagination = pagination(url("user-list-$srchtype-".urlencode($keyword).'-{page}'), $n, $page, $pagesize);
+	$pager = pager(url("user-list-$srchtype-".urlencode($keyword).'-{page}'), $n, $page, $pagesize);
 
 	foreach ($userlist as &$_user) {
 		$_user['group'] = array_value($grouplist, $_user['gid'], '');
 	}
 
-	include "./admin/view/user_list.htm";
+	// hook admin_user_list_end.php
+	
+	include _include(ADMIN_PATH."view/htm/user_list.htm");
 
 } elseif($action == 'create') {
 
+	// hook admin_user_create_get_post.php
+	
 	if($method == 'GET') {
 
-		$header['title'] = '用户创建';
-
-		include "./admin/view/user_create.htm";
+		// hook admin_user_create_get_start.php
+		
+		$header['title'] = lang('admin_user_create');
+		$header['mobile_title'] = lang('admin_user_create');
+		
+		$input['email'] = form_text('email', '');
+		$input['username'] = form_text('username','');
+		$input['password'] = form_password('password', '');
+		$grouparr = arrlist_key_values($grouplist, 'gid', 'name');
+		$input['_gid'] = form_select('_gid', $grouparr, 0);
+		
+		// hook admin_user_create_get_end.php
+		
+		include _include(ADMIN_PATH."view/htm/user_create.htm");
 
 	} elseif ($method == 'POST') {
 
-		$mobile = param('mobile');
 		$email = param('email');
 		$username = param('username');
 		$password = param('password');
-		$gid = param('gid');
-
-		$mobile AND !is_mobile($mobile, $err) AND message(1, $err);
-		$email AND !is_email($email, $err) AND message(2, $err);
-		$username AND !is_username($username, $err) AND message(3, $err);
-		// !is_password($password, $err) AND message(4, $err);
-
-		if($mobile) {
-			$user = user_read_by_mobile($mobile);
-			$user AND message(1, '用户手机已经存在');
-		}
+		$_gid = param('_gid');
 		
-		$user = user_read_by_email($email);
-		$user AND message(2, '用户 EMAIL 已经存在');
+		// hook admin_user_create_post_start.php
+		
+		empty($email) AND message('email', lang('please_input_email'));
+		$email AND !is_email($email, $err) AND message('email', $err);
+		$username AND !is_username($username, $err) AND message('username', $err);
 
-		$user = user_read_by_username($username);
-		$user AND message(3, '用户已经存在');
+		$_user = user_read_by_email($email);
+		$_user AND message('email', lang('email_is_in_use'));
 
-		$salt = mt_rand(10000000, 9999999999);
-		$state = user_create(array(
+		$_user = user_read_by_username($username);
+		$_user AND message('username', lang('user_already_exists'));
+
+		$salt = xn_rand(16);
+		$r = user_create(array(
 			'username'=>$username,
-			'password'=>md5($password.$salt),
+			'password'=>md5(md5($password).$salt),
 			'salt'=>$salt,
-			'gid'=>$gid,
+			'gid'=>$_gid,
 			'email'=>$email,
-			'mobile'=>$mobile,
 			'create_ip'=>ip2long(ip()),
 			'create_date'=>$time
 		));
-		$state !== FALSE ? message(0, '创建成功') : message(11, '创建失败');
+		$r === FALSE AND message(-1, lang('create_failed'));
+		
+		// hook admin_user_create_post_end.php
+		
+		message(0, lang('create_successfully'));
 
 	}
 
 } elseif($action == 'update') {
 
-	$uid = param(2, 0);
+	$_uid = param(2, 0);
+	
+	// hook admin_user_update_get_post.php
 	
 	if($method == 'GET') {
 
-		$header['title'] = '用户更新';
+		// hook admin_user_update_get_start.php
 		
-		$user = user_read($uid);
+		$header['title'] = lang('user_edit');
+		$header['mobile_title'] = lang('user_edit');
+		
+		$_user = user_read($_uid);
+		
+		$input['email'] = form_text('email', $_user['email']);
+		$input['username'] = form_text('username', $_user['username']);
+		$input['password'] = form_password('password', '');
+		$grouparr = arrlist_key_values($grouplist, 'gid', 'name');
+		$input['_gid'] = form_select('_gid', $grouparr, $_user['gid']);
 
-		include "./admin/view/user_update.htm";
+		// hook admin_user_update_get_end.php
+		
+		include _include(ADMIN_PATH."view/htm/user_update.htm");
 
 	} elseif($method == 'POST') {
 
-		$mobile = param('mobile');
 		$email = param('email');
 		$username = param('username');
 		$password = param('password');
-		$gid = param('gid');
+		$_gid = param('_gid');
 		
-		$old = user_read($uid);
-
+		// hook admin_user_update_post_start.php
+		
+		$old = user_read($_uid);
+		empty($old) AND message('username', lang('uid_not_exists'));
+		
 		$email AND !is_email($email, $err) AND message(2, $err);
 		if($email AND $old['email'] != $email) {
-			$user = user_read_by_email($email);
-			$user AND message(2, '用户 EMAIL 已经存在');
+			$_user = user_read_by_email($email);
+			$_user AND $_user['uid'] != $_uid AND message('email', lang('email_already_exists'));
 		}
-
+		if($username AND $old['username'] != $username) {
+			$_user = user_read_by_username($username);
+			$_user AND $_user['uid'] != $_uid AND message('username', lang('user_already_exists'));
+		}
+		
 		$arr = array();
 		$arr['email'] = $email;
-		// 非管理员(gid = 1)，不允许修改其他用户的手机号、用户名、用户组、密码
-		if($user['gid'] == 1) {
-			$mobile AND !is_mobile($mobile, $err) AND message(1, $err);
-			//$username AND !is_username($username, $err) AND message(3, $err);
-
-			
-			if($mobile AND $old['mobile'] != $mobile) {
-				$user = user_read_by_mobile($mobile);
-				$user AND message(1, '用户手机已经存在');
-			}
-
-			if($username AND $old['username'] != $username) {
-				$user = user_read_by_username($username);
-				$user AND message(3, '用户已经存在');
-			}
-
-			$arr['mobile'] = $mobile;
-			$arr['username'] = $username;
-			$arr['gid'] = $gid;
-
-			if($password) {
-				!is_password($password, $err) AND message(4, $err);
-				$salt = mt_rand(10000000, 9999999999);
-				$arr['password'] = md5($password.$salt);
-				$arr['salt'] = $salt;
-			}
+		$arr['username'] = $username;
+		$arr['gid'] = $_gid;
+		
+		if($password) {
+			$salt = xn_rand(16);
+			$arr['password'] = md5(md5($password).$salt);
+			$arr['salt'] = $salt;
 		}
+		
+		// 仅仅更新发生变化的部分 / only update changed field
+		$update = array_diff_value($arr, $old);
+		empty($update) AND message(-1, lang('data_not_changed'));
 
-		$r = user_update($uid, $arr);
-		$r !== FALSE ? message(0, '更新成功') : message(11, '更新失败');
+		$r = user_update($_uid, $update);
+		$r === FALSE AND message(-1, lang('update_failed'));
+		
+		// hook admin_user_update_post_end.php
+		
+		message(0, lang('update_successfully'));
 	}
 
 } elseif($action == 'delete') {
 
 	if($method != 'POST') message(-1, 'Method Error.');
 
-	$uid = param('uid', 0);
+	$_uid = param('uid', 0);
+	
+	// hook admin_user_delete_start.php
+	
+	$_user = user_read($_uid);
+	empty($_user) AND message(-1, lang('user_not_exists'));
+	($_user['gid'] == 1) AND message(-1, 'admin_cant_be_deleted');
 
-	$state = user_delete($uid);
-	$state === FALSE AND message(11, '删除失败');
-
-	message(0, '删除成功');
-
+	$r = user_delete($_uid);
+	$r === FALSE AND message(-1, lang('delete_failed'));
+	
+	// hook admin_user_delete_end.php
+	
+	message(0, lang('delete_successfully'));
+	
 }
+
+// hook admin_user_start.php
+
 ?>

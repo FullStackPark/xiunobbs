@@ -2,207 +2,209 @@
 
 !defined('DEBUG') AND exit('Access Denied.');
 
-include './xiunophp/image.func.php';
-include './xiunophp/xn_html_safe.func.php';
-
 $action = param(1);
-if($action == 'list') {
 
-	$header['title']    = '板块管理';
+// 不允许删除的版块 / system keeped forum
+$system_forum = array(1);
 
-	$forumlist = forum_find();
-	$maxfid = forum_maxid();
+// hook admin_forum_start.php
+
+if(empty($action) || $action == 'list') {
 	
+	// hook admin_forum_list_get_post.php
 	
-	include "./admin/view/forum_list.htm";
-
-// 板块更新
-} elseif($action == 'update') {
-
 	if($method == 'GET') {
-
-		$fid   = param(2, 0);
-		$header['title'] = '板块更新';
-		$forum = forum_read($fid);
 		
-		$grouplist = group_find();
-		$accesslist = forum_access_find_by_fid($fid);
-		if (empty($accesslist)) {
-			foreach ($grouplist as $group) {
-				$accesslist[$group['gid']] = $group; // 字段名相同，直接覆盖。
-			}
-		} else {
-			foreach ($accesslist as &$access) {
-				$access['name'] = $grouplist[$access['gid']]['name']; // 字段名相同，直接覆盖。
-			}
-		}
-		array_htmlspecialchars($forum);
-
-		include "./admin/view/forum_update.htm";
-
+		// hook admin_forum_list_get_start.php
+		
+		$header['title']        = lang('forum_admin');
+		$header['mobile_title'] = lang('forum_admin');
+	
+		$maxfid = forum_maxid();
+		
+		// hook admin_forum_list_get_end.php
+		
+		include _include(ADMIN_PATH."view/htm/forum_list.htm");
+	
 	} elseif($method == 'POST') {
 		
-		$fid = param(2, 0);
-		$name = param('name');
-		$rank = param('rank');
-		$moduids = param('moduids');
-		$moduids = forum_filter_moduid($moduids);
+		$fidarr = param('fid', array(0));
+		$namearr = param('name', array(''));
+		$rankarr = param('rank', array(0));
+		$iconarr = param('icon', array(''));
 		
-		$forum = forum_read($fid);
+		// hook admin_forum_list_post_start.php
 		
-		empty($name) AND message(1, '论坛名称不能为空');
-		
-		// 列表页 ajax post 逐行提交
-		$arr = array(
-			'name'         => $name,
-			'rank'         => $rank,
-			'create_date'  => $time,
-		);
-		
-		// 详情页的 POST 提交
-		if(isset($_POST['brief'])) {
+		$arrlist = array();
+		foreach($fidarr as $k=>$v) {
+			$arr = array(
+				'fid'=>$k,
+				'name'=>array_value($namearr, $k),
+				'rank'=>array_value($rankarr, $k)
+			);
 			
-			empty($forum) AND message(11, '版块不存在');
-			
-			$brief = param('brief', '', FALSE);
-			
-			$accesson = param('accesson', 0);
-			$moduids = param('moduids');
-			$seo_title = param('seo_title');
-			$seo_keywords = param('seo_keywords');
-			
-			$grouplist = group_list_cache();
-			if($accesson) {
-				$allowread = param('allowread', array(0));
-				$allowthread = param('allowthread', array(0));
-				$allowpost = param('allowpost', array(0));
-				$allowagree = param('allowagree', array(0));
-				//$allowattach = param('allowattach', array(0));
-				$allowdown = param('allowdown', array(0));
-				foreach ($grouplist as $gid=>$v) {
-					$access = array (
-						'allowread'=>array_value($allowread, $gid, 0),
-						'allowthread'=>array_value($allowthread, $gid, 0),
-						'allowpost'=>array_value($allowpost, $gid, 0),
-						'allowagree'=>array_value($allowagree, $gid, 0),
-						//'allowattach'=>array_value($allowattach, $gid, 0),
-						'allowdown'=>array_value($allowdown, $gid, 0),
-					);
-					forum_access_replace($fid, $gid, $access);
-				}
+			if(!isset($forumlist[$k])) {
+				// hook admin_forum_list_add_before.php
+				forum_create($arr);
 			} else {
-				forum_access_delete_by_fid($fid);
+				// hook admin_forum_list_update_before.php
+				forum_update($k, $arr);
 			}
-			$arr['accesson'] = $accesson;
-			$arr['brief'] = $brief;
-			$arr['moduids'] = $moduids;
-			$arr['seo_title'] = $seo_title;
-			$arr['seo_keywords'] = $seo_keywords;
+			// icon
+			if(!empty($iconarr[$k])) {
+				
+				$s = array_value($iconarr, $k);
+				$data = substr($s, strpos($s, ',') + 1);
+				$data = base64_decode($data);
+				
+				$iconfile = "../upload/forum/$k.png";
+				file_put_contents($iconfile, $data);
+				
+				forum_update($k, array('icon'=>$time));
+			}
+			
+			// hook admin_forum_list_post_loop_end.php
 		}
 		
-		if(empty($forum)) {
-			$arr['fid'] = $fid;
-			$r = forum_create($arr);
-			$r !== FALSE ? message(0, '创建成功') : message(11, '创建失败');
+		// 删除 / delete
+		$deletearr = array_diff_key($forumlist, $fidarr);
+		foreach($deletearr as $k=>$v) {
+			if(in_array($k, $system_forum)) continue;
+			// hook admin_forum_list_delete_before.php
+			forum_delete($k);
+			// hook admin_forum_list_delete_end.php
 		}
 		
-		$r = forum_update($fid, $arr);
-		$r !== FALSE ? message(0, '更新成功') : message(12, '更新失败');
+		forum_list_cache_delete();
+		
+		// hook admin_forum_list_post_end.php
+		
+		
+		
+		message(0, lang('save_successfully'));
 	}
 
-} elseif($action == 'delete') {
+} elseif($action == 'update') {
+	
+	$_fid = param(2, 0);
+	$_forum = forum_read($_fid);
+	empty($_forum) AND message(-1, lang('forum_not_exists'));
+	
+	// hook admin_forum_update_get_post.php
+	
+	if($method == 'GET') {
+		
+		$header['title']        = lang('forum_edit');
+		$header['mobile_title'] = lang('forum_edit');
+	
+		// hook admin_forum_update_get_start.php
+		
+		$accesslist = forum_access_find_by_fid($_fid);
+		
+		if(empty($accesslist)) {
+			foreach($grouplist as $group) {
+				$accesslist[$group['gid']] = $group; // 字段名相同，直接覆盖。 / same field, directly overwrite
+			}
+		} else {
+			foreach($accesslist as &$access) {
+				$access['name'] = $grouplist[$access['gid']]['name']; // 字段名相同，直接覆盖。 / same field, directly overwrite
+			}
+		}
+		array_htmlspecialchars($_forum);
+		
+		$input = array();
+		$input['name'] = form_text('name', $_forum['name']);
+		$input['rank'] = form_text('rank', $_forum['rank']);
+		$input['brief'] = form_textarea('brief', $_forum['brief'], '100%', 80);
+		$input['announcement'] = form_textarea('announcement', $_forum['announcement'], '100%', 80);
+		$input['accesson'] = form_checkbox('accesson', $_forum['accesson']);
+		$input['moduids'] = form_text('moduids', $_forum['moduids']);
+		
+		// hook admin_forum_update_get_end.php
+		
+		
+		include _include(ADMIN_PATH."view/htm/forum_update.htm");
+	
+	} elseif($method == 'POST') {	
+		
+		$name = param('name');
+		$rank = param('rank', 0);
+		$brief = param('brief', '', FALSE);
+		$announcement = param('announcement', '', FALSE);
+		$moduids = param('moduids');
+		$accesson = param('accesson', 0);
+		$moduids = forum_filter_moduid($moduids);
+		
+		// hook admin_forum_update_post_start.php
+		
+		$arr = array (
+			'name' => $name,
+			'rank' => $rank,
+			'brief' => $brief,
+			'announcement' => $announcement,
+			'moduids' => $moduids,
+			'accesson' => $accesson,
+		);
 
-	if($method != 'POST') message(-1, 'Method Error.');
-
-	$fid = param(2, 0);
-	$forum = forum_read($fid);
-	empty($forum) AND message(1, '板块不存在');
-	
-	forum_count() == 1 AND message(-1, '不能删除最后一个版块。');
-	
-	$r = forum_delete($fid);
-	$r !== FALSE ? message(0, '删除成功') : message(1, '删除失败');
-
-	
-} elseif($action == 'uploadicon') {
-	
-	$method != 'POST' AND message(-1, 'Method Error.');
-	
-	$fid = param(2, 0);
-
-	$forum = forum_read($fid);
-	empty($forum) AND message(1, '板块不存在');
-	
-	$upfile = param('upfile', '', FALSE);
-	empty($upfile) AND message(-1, 'upfile 数据为空');
-	$json = xn_json_decode($upfile);
-	empty($json) AND message(-1, '数据有问题: json 为空');
-	
-	$name = $json['name'];
-	$width = $json['width'];
-	$height = $json['height'];
-	$data = base64_decode($json['data']);
-	$size = strlen($data);
-	
-	$filename = "$fid.png";
-	$path = $conf['upload_path'].'forum/';
-	$url = $conf['upload_url'].'forum/'.$filename;
-	!IN_SAE AND !is_dir($path) AND (mkdir($path, 0777, TRUE) OR message(-2, '目录创建失败'));
-	
-	file_put_contents($path.$filename, $data) OR message(-1, '写入文件失败');
-	
-	forum_update($fid, array('icon'=>$time));
-	
-	message(0, $url);
+		// hook admin_forum_update_post_before.php
+		
+		forum_update($_fid, $arr);
+		
+		if($accesson) {
+			$allowread = param('allowread', array(0));
+			$allowthread = param('allowthread', array(0));
+			$allowpost = param('allowpost', array(0));
+			$allowattach = param('allowattach', array(0));
+			$allowdown = param('allowdown', array(0));
+			foreach($grouplist as $_gid=>$v) {
+				$access = array (
+					'allowread'=>array_value($allowread, $_gid, 0),
+					'allowthread'=>array_value($allowthread, $_gid, 0),
+					'allowpost'=>array_value($allowpost, $_gid, 0),
+					'allowattach'=>array_value($allowattach, $_gid, 0),
+					'allowdown'=>array_value($allowdown, $_gid, 0),
+				);
+				forum_access_replace($_fid, $_gid, $access);
+			}
+		} else {
+			forum_access_delete_by_fid($_fid);
+		}
+		
+		
+		
+		// hook admin_forum_update_post_end.php
+		
+		forum_list_cache_delete();
+		
+		message(0, lang('edit_sucessfully'));	
+	}
 
 } elseif($action == 'getname') {
 	
-	$uids = param(2);
+	$uids = xn_urldecode(param(2));
 	$arr = explode(',', $uids);
 	$names = array();
 	$err = '';
+	
+	// hook admin_forum_getname_start.php
+	
 	foreach($arr as $_uid) {
 		$_uid = intval($_uid);
 		if(empty($_uid)) continue;
 		$_user = user_read($_uid);
-		if(empty($_user)) { $err .= "$_uid 不存在; "; continue; }
-		if($_user['gid'] > 4) { $err .= "$_uid 不是斑竹; ";  continue; }
+		if(empty($_user)) { $err .= lang('item_not_exists', array('item'=>$_uid)); continue; }
+		if($_user['gid'] > 4) { $err .= lang('item_not_moderator', array('item'=>$_uid));  continue; }
 		$names[] = $_user['username'];
 	}
 	$s = implode(',', $names);
-	$err ? message(1, $err) : message(0, $s);
+	$err AND message(-1, $err);
 	
-} elseif($action == 'getuid') {
+	// hook admin_forum_getname_end.php
+	
+	message(0, $s);
 		
-	$names = xn_urldecode(param(2));
-	$arr = explode(',', $names);
-	$ids = array();
-	$err = '';
-	foreach($arr as $name) {
-		if(empty($name)) continue;
-		$_user = user_read_by_username($name);
-		if(empty($_user)) { $err .= "$name 不存在; "; continue; }
-		if($_user['gid'] > 4) { $err .= "$name 不是斑竹; ";  continue; }
-		$ids[] = $_user['uid'];
-	}
-	$s = implode(',', $ids);
-
-	$err ? message(1, $err) : message(0, $s);
 }
 
-function forum_filter_moduid($moduids) {
-	$moduids = trim($moduids);
-	if(empty($moduids)) return '';
-	$arr = explode(',', $moduids);
-	$r = array();
-	foreach($arr as $_uid) {
-		$_uid = intval($_uid);
-		$_user = user_read($_uid);
-		if(empty($_user)) continue;
-		if($_user['gid'] > 4) continue;
-		$r[] = $_uid;
-	}
-	return implode(',', $r);
-}
+// hook admin_forum_end.php
 
 ?>
