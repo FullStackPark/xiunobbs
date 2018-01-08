@@ -9,7 +9,22 @@ body {
 html, body {
 	height: 100%;
 	font-family: "Helvetica Neue", Helvetica, "Microsoft Yahei", "Hiragino Sans GB", "WenQuanYi Micro Hei", "微软雅黑", "华文细黑", STHeiti, sans-serif;
+}
 
+/* 页脚固定在底部 */
+#wrapper { height: 100%; display: flex;  flex-direction: column;}
+#header, #body, #footer { width: 100%; }
+#header { flex: 0 0 auto; }
+#body { flex: 1 0 auto; }
+#footer { flex: 0 0 auto; }
+
+@media (min-width: 576px) {
+	#body { padding-top: 1.5rem;}
+}
+
+@media (max-width: 576px) {
+	#body { padding-top: 0.5rem;}
+	#body > .row > div { padding: 0.2rem;}
 }
 
 .table th {
@@ -28,7 +43,9 @@ small, .small {
 .text-grey {
 	color: #aaaaaa !important;
 }
-
+.break-all {
+	word-break: break-all;
+}
 .card {
 	margin-bottom: 1.5rem;
 }
@@ -91,45 +108,24 @@ small, .small {
 	background-color: rgba(255, 255, 255, 0.6) !important;
 }
 
-.line-height-1 {
-	 line-height: 1 !important;
-}
+.line-height-1 { line-height: 1 !important; }
+.line-height-2 { line-height: 1.6 !important; }
+.line-height-3 { line-height: 2 !important; }
+.line-height-4 { line-height: 2.5 !important; }
+.line-height-5 { line-height: 3 !important; }
+.line-height-6 { line-height: 4 !important; }
 
-.line-height-2 {
-	 line-height: 2 !important;
-}
-
-.line-height-3 {
-	 line-height: 3 !important;
-}
-
-/* 仅仅小屏幕下显示，中大屏隐藏 */
-/* 等价于： d-none d-sm-block */
-/* >= 576 */
-
-@media (min-width: 576px) {
-	.d-sm-show { display: none !important; }
-	#body { padding-top: 1.5rem;}
-}
-
-/* 仅仅大屏幕下显示，中小屏隐藏 */
-/* 等价于： d-none d-lg-block */
-/* <= 576 */
 @media (max-width: 576px) {
-	.d-sm-hide { display: none !important; }
-	#body { padding-top: 0.5rem;}
-	#body > .row > div { padding: 0.2rem;}
+  .hidden-sm { display: none !important; }
 }
 
-/* 中小屏显示，大屏下不显示 
-@media (min-width: 768px) {
-	.d-md-sm-show { display: none !important; }
+@media (min-width: 576px) and (max-width: 992px){
+  .hidden-md { display: none !important; }
+}
+@media (min-width: 992px) {
+  .hidden-lg { display: none !important; }
 }
 
-@media (max-width: 768px) {
-	.d-md-hide { display: none !important; }
-}
-*/
 
 /********************************* bbs 业务部分 *************************************/
 /*  ul, dl 多列定义，用来模拟简单的表格布局，如果不考虑响应，比 pull-left pull-right 方便  */
@@ -224,10 +220,7 @@ a:hover {
   position: relative;
 }
 
-#body {
-  padding-bottom: 3rem;
-  padding-top: 3rem;
-}
+
 
 #footer {
   font-size: 0.75rem;

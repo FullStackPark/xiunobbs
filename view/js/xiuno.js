@@ -727,6 +727,7 @@ $.xget = function(url, callback, retry) {
 		url: url,
 		dataType: 'text',
 		timeout: 15000,
+		xhrFields: {withCredentials: true},
 		success: function(r){
 			if(!r) return callback(-100, 'Server Response Empty!');
 			var s = xn.json_decode(r);
@@ -946,7 +947,7 @@ $.fn.base64_encode_file = function(width, height, action) {
 		jsubmit.button('disabled');
 		var file = obj.files[0];
 
-        // 创建一个隐藏域，用来保存 base64 数据
+       		// 创建一个隐藏域，用来保存 base64 数据
 		var jhidden = $('<input type="hidden" name="'+obj.name+'" />').appendTo(jform);
 		obj.name = '';
 
@@ -1104,7 +1105,7 @@ xn.image_resize = function(file_base64_data, callback, options) {
 	var thumb_height = options.height || 2400;
 	var action = options.action || 'thumb';
 	var filetype = options.filetype || 'jpg';//xn.base64_data_image_type(file_base64_data);
-	var qulity = options.qulity || 0.7; // 图片质量, 1 为无损
+	var qulity = options.qulity || 0.9; // 图片质量, 1 为无损
 	
 	if(thumb_width < 1) return callback(-1, '缩略图宽度不能小于 1 / thumb image width length is less 1 pix');
 	if(xn.substr(file_base64_data, 0, 10) != 'data:image') return callback(-1, '传入的 base64 数据有问题 / deformed base64 data');

@@ -10,10 +10,11 @@
 				<h4 class="text-center"><?php echo $_user['username'];?></h4>
 				<p class="text-center">[<?php echo $_user['groupname'];?>]</p>
 				<hr />
-				<div class="row">
+				<div class="row text-left">
 					<div class="col-sm-6">
 						<p><span class="text-muted"><?php echo lang('username');?>：</span><span><?php echo $_user['username'];?></span></p>
-						<p><span class="text-muted"><?php echo lang('email');?>：</span><span><?php echo $_user['email'];?></span></p>
+						<?php if($gid == 1) { ?><p><span class="text-muted"><?php echo lang('email');?>：</span><span><?php echo $_user['email'];?></span></p>
+						<?php } ?>
 						<p><span class="text-muted"><?php echo lang('user_group');?>：</span><span><?php echo $_user['groupname'];?></span></p>
 						<p><span class="text-muted"><?php echo lang('create_date');?>：</span><span><?php echo $_user['create_date_fmt'];?></span></p>
 						<p><span class="text-muted"><?php echo lang('last_login_date');?>：</span><span><?php echo $_user['login_date_fmt'];?></span></p>
@@ -47,15 +48,18 @@
 			</div>
 		</div>
 		
-		<nav class="text-center"><ul class="pagination"><?php echo $pagination; ?></ul></nav>
+		<?php if($pagination) { ?>
+		<nav><ul class="pagination justify-content-center"><?php echo $pagination; ?></ul></nav>
+		<?php } ?>
 		　　
+
 		<!--{hook user_profile_page_after.htm}-->
 
 		<?php if(!empty($group['allowdeleteuser'])) { ?>
-		<a role="button" class="btn btn-danger confirm btn-block" data-confirm-text="<?php echo lang('confirm_delete_user');?>" data-method="post" href="<?php echo url("mod-deleteuser-$_user[uid]");?>"><?php echo lang('delete_user');?></a>
+		<a role="button" class="btn btn-danger confirm btn-block my-3" data-confirm-text="<?php echo lang('confirm_delete_user');?>" data-method="post" href="<?php echo url("mod-deleteuser-$_user[uid]");?>"><?php echo lang('delete_user');?></a>
 		<?php } ?>
 		
-		<a role="button" class="btn btn-secondary btn-block mt-3" href="<?php echo url('my');?>"> <?php echo lang('back');?> </a>
+		<a role="button" class="btn btn-secondary btn-block my-3" href="<?php echo url('my');?>"> <?php echo lang('back');?> </a>
 		
 		
 	</div>
