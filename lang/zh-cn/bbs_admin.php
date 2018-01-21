@@ -5,7 +5,7 @@ return array(
 	'forum'=>'版块',
 	'plugin'=>'插件',
 	'other'=>'其他',
-	'buy'=>'购买',
+	'buy'=>'Buy',
 	
 	'user_admin'=>'用户管理',
 	'group_admin'=>'用户组管理',
@@ -81,6 +81,7 @@ return array(
 	'host'=>'主机',
 	'port'=>'端口',
 	'account'=>'账号',
+	'smtp_host'=>'SMTP 主机',
 	
 	// 版块
 	'forum_list'=>'版块列表',
@@ -96,13 +97,16 @@ return array(
 	'add_new_line'=>'增加一行',
 	'forum_edit_tip'=>'请谨慎编辑版块，一旦确定后不要轻易变动，否则可能会导致数据关联错误，一般在正式运营时就不要再变动。',
 	'forum_cant_delete_system_reserved'=>'不能删除系统保留的版块。',
-	'forum_moduid_format_tips'=>'最多允许10个，逗号隔开，如：123,456,789',
+	'forum_moduid_format_tips'=>'最多允许10个，逗号隔开，如：Jack,Lisa,Mike',
 	'user_privilege'=>'用户权限',
 	'allow_view'=>'允许看帖',
 	'allow_thread'=>'发主题',
 	'allow_post'=>'回贴',
 	'allow_upload'=>'上传',
 	'allow_download'=>'下载',
+	'forum_delete_thread_before_delete_forum'=>'请先通过批量主题管理删除版块主题。',
+	'forum_please_delete_sub_forum'=>'请删除子版块。',
+	'forum_delete_successfully'=>'删除成功。',
 	
 	// 主题
 	'thread_queue_not_exists'=>'队列不存在',
@@ -175,6 +179,12 @@ return array(
 	'plugin_name_error'=>'插件名不合法',
 	'plugin_unstall_confirm_tips'=>'卸载会清理该插件相关数据，确定卸载 ( {name} ) 吗？',
 	'plugin_task_locked'=>'另外一个插件任务正在执行，当前任务被锁住。',
+	'plugin_return_data_error'=>'返回数据有误：',
+	'plugin_is_free'=>'该插件免费。',
+	'plugin_is_not_free'=>'该插件需要付费购买，请先支付。',
+	'plugin_is_bought'=>'已经购买过。',
+	'plugin_not_bought'=>'还没购买过。',
+	'plugin_wechat_qrcode_pay'=>'微信扫码支付。',
 	
 	
 	// hook lang_zh_cn_bbs_admin.php

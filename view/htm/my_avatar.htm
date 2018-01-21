@@ -1,12 +1,17 @@
 <?php include _include(APP_PATH.'view/htm/header.inc.htm');?>
 
 <div class="row">
-	<div class="col-lg-6 offset-lg-3">
+	<div class="col-lg-8 mx-auto">
+	
+		<?php include _include(APP_PATH.'view/htm/my_profile.inc.htm');?>
+		
 		<div class="card">
-			<div class="card-header"><?php echo lang('modify_avatar');?></div>
+			<div class="card-header">
+				<?php include _include(APP_PATH.'view/htm/my_nav.inc.htm');?>
+			</div>
 			<div class="card-body text-center">
 				<div class="form-group">
-					<img id="avatar_img" class="avatar-lg" src="<?php echo $user['avatar_url'];?>">
+					<img id="avatar_img" class="logo-4" src="<?php echo $user['avatar_url'];?>">
 				</div>
 				<div class="form-group custom-file">
 					<input type="file" id="avatar_upload" accept="image/gif,image/jpeg,image/png,image/jpg,image/bmp"  class="upload custom-file-input" value="<?php echo lang('modify_avatar');?>"/>
@@ -17,8 +22,6 @@
 				</div>
 			</div>
 		</div>
-		<a role="button" class="btn btn-secondary btn-block mb-3" href="<?php echo url('my');?>"> <?php echo lang('back');?> </a>
-		
 	</div>
 </div>
 

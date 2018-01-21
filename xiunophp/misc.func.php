@@ -43,11 +43,11 @@ function error_handle($errno, $errstr, $errfile, $errline) {
 		$message [] = "File: $v[file], Line: $v[line], $v[function]($args) ";
 	}
 	$txt = $subject."\r\n".implode("\r\n", $message);
-	$html = $s = "<fieldset class=\"fieldset\">
+	$html = $s = "<fieldset class=\"fieldset small notice\">
 			<b>$subject</b>
 			<div>".implode("<br>\r\n", $message)."</div>
 		</fieldset>";
-	echo $ajax ? $txt : $html;
+	echo ($ajax || IN_CMD) ? $txt : $html;
 	DEBUG == 2 AND xn_log($txt, 'debug_error');
 	return TRUE;
 }
@@ -797,28 +797,36 @@ function https_post($url, $post = '', $cookie = '', $timeout = 30, $times = 1) {
 	if(substr($url, 0, 7) == 'http://') {
 		return http_post($url, $post, $cookie, $timeout, $times);
 	}
+	is_array($post) AND $post = http_build_query($post);
+	is_array($cookie) AND $cookie = http_build_query($cookie);
 	$w = stream_get_wrappers();
 	$allow_url_fopen = strtolower(ini_get('allow_url_fopen'));
 	$allow_url_fopen = (empty($allow_url_fopen) || $allow_url_fopen == 'off') ? 0 : 1;
 	if(extension_loaded('openssl') && in_array('https', $w) && $allow_url_fopen) {
-		return file_get_contents($url);
+		$stream = stream_context_create(array('http' => array('header' => "Content-type: application/x-www-form-urlencoded\r\nx-requested-with: XMLHttpRequest\r\nCookie: $cookie\r\n", 'method' => 'POST', 'content' => $post, 'timeout' => $timeout)));
+		$s = file_get_contents($url, NULL, $stream, 0, 4096000);
+		return $s;
 	} elseif (!function_exists('curl_init')) {
 		return xn_error(-1, 'server not installed curl.');
 	}
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 	curl_setopt($ch, CURLOPT_HEADER, 2); // 1/2
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/x-www-form-urlencoded', 'x-requested-with: XMLHttpRequest'));
 	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT']);
+	curl_setopt($ch, CURLOPT_USERAGENT, _SERVER('HTTP_USER_AGENT'));
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); // 对认证证书来源的检查
 	curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2); // 从证书中检查SSL加密算法是否存在，默认可以省略
 	if($post) {
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
 	}
+	$header = array('Content-type: application/x-www-form-urlencoded', 'X-Requested-With: XMLHttpRequest');
 	if($cookie) {
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array("Cookie: $cookie"));
+		$header[] = "Cookie: $cookie";
 	}
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+	
 	(!ini_get('safe_mode') && !ini_get('open_basedir')) && curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1); // 使用自动跳转, 安全模式不允许
 	curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
 	$data = curl_exec($ch);
@@ -1295,11 +1303,11 @@ function copy_recusive($src, $dst) {
 
 // 随机字符
 function xn_rand($n = 16) {
-	$str = '0123456789abcdefghijklmnopqrstuvwxyz';
+	$str = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 	$len = strlen($str);
 	$return = '';
 	for($i=0; $i<$n; $i++) {
-		$r = rand(1, $len);
+		$r = mt_rand(1, $len);
 		$return .= $str[$r - 1];
 	}
 	return $return;
@@ -1338,7 +1346,7 @@ function xn_debug_info() {
 	$starttime = $_SERVER['starttime'];
 	$s = '';
 	if(DEBUG > 1) {
-		$s .= '<div class="small break-all">';
+		$s .= '<fieldset class="fieldset small debug break-all">';
 		$s .= '<p>Processed Time:'.(microtime(1) - $starttime).'</p>';
 		if(IN_CMD) {
 			foreach($db->sqls as $sql) {
@@ -1358,7 +1366,7 @@ function xn_debug_info() {
 			}
 			$s .= '';
 		}
-		$s .= '</div>';
+		$s .= '</fieldset>';
 	}
 	return $s;
 }

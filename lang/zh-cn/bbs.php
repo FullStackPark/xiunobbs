@@ -79,6 +79,9 @@ return array(
 	'logout_successfully'=>'退出成功',
 	
 	'orderby'=>'排序',
+	'thread_create_date'=>'发帖时间',
+	'post_create_date'=>'回帖时间',
+	'uploaded_attach'=>'上传的附件',
 	
 	
 	// 用户相关
@@ -110,6 +113,8 @@ return array(
 	'user_login'=>'用户登录',
 	'user_profile'=>'个人资料',
 	'user_resetpw'=>'重设密码',
+	'password_new'=>'新密码',
+	'password_new'=>'重复新密码',
 	'email_is_empty' => '邮箱为空',
 	'email_not_exists' => '邮箱不存在',
 	'username_not_exists' => '用户名不存在',
@@ -153,7 +158,8 @@ return array(
 	'link_has_expired'=>'链接已经过期',
 	'please_login'=>'请登录',
 	'send_init_pw_tips'=>'无需验证',
-	'user_joined_thread'=>'他参与的主题',
+	'user_thread'=>'他的主题',
+	'user_post'=>'他的帖子',
 	'delete_user'=>'删除用户',
 	'confirm_delete_user'=>'确定删除用户？',
 	'confirm_delete'=>'确定删除？',
@@ -163,9 +169,9 @@ return array(
 	'my_profile' => '个人资料',
 	'modify_password' => '修改密码',
 	'modify_avatar' => '修改头像',
-	'my_post' => '我的发帖',
-	'last_login_date' => '最后登录时间',
-	'my_join_thread' => '我的主题',
+	'my_post' => '我的帖子',
+	'last_login_date' => '最后登录',
+	'my_thread' => '我的主题',
 	'repeat_password_incorrect' => '两次输入的密码不一致',
 	'old_password_incorrect' => '旧密码不正确',
 	'password_modify_failed' => '密码修改失败',
@@ -269,13 +275,13 @@ return array(
 	'lang_zh_tw'=>'正體中文',
 	'lang_en_us'=>'美式英语',
 	
-	
-	
 	'rank'=>'排序',
 	'tag'=>'标签',
 	'tag_cate'=>'标签分类',
 	'tag_cate_name'=>'分类名称',
 	'tag_name'=>'标签名称',
+	
+	'toggler_menu'=>'展开菜单',
 	
 	// hook lang_zh_cn_bbs.php
 	

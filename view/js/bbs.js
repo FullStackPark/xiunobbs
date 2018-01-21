@@ -10,6 +10,7 @@ $('form').keyup(function(e) {
 // 点击响应整行：方便手机浏览  / check response line
 $('.tap').on('click', function(e) {
 	var href = $(this).attr('href') || $(this).data('href');
+	if(e.target.nodeName == 'INPUT') return true;
 	if(e.ctrlKey) {
 		window.open(href);
 		return false;
@@ -63,7 +64,9 @@ $('.mod-button button.move').on('click', function() {
 $('.mod-button button.top').on('click', function() {
 	var modtid = $('input[name="modtid"]').checked();
 	if(modtid.length == 0) return $.alert(lang.please_choose_thread);
-	var radios = xn.form_radio('top', {"0": lang.top_0, "1": lang.top_1, "3": lang.top_3});
+	var lang_top = {"0": lang.top_0, "1": lang.top_1};
+	if(gid == 1) lang_top["3"] = lang.top_3; //  || gid == 2
+	var radios = xn.form_radio('top', lang_top);
 	$.confirm(lang.top_thread, function() {
 		var tids = xn.implode('_', modtid);
 		var top = $('input[name="top"]').checked();
@@ -130,10 +133,10 @@ jmobile_collapsing_bavbar.on('touchmove', function(e) {
 });*/
 
 // hack: history.back() cannot back, go to the index
-$('.xn-back').on('click', function() {
-	$('.xn-back').delay(1000).location('./');
+//$('.xn-back').on('click', function() {
+	//$('.xn-back').delay(10000).location('./');
 	//return false;
-});
+//});
 
 
 
@@ -150,7 +153,7 @@ $('body').on('click', '.post_delete', function() {
 					$.location('<?php echo url("forum-$fid");?>');
 				} else {
 					// 删掉楼层
-					jthis.parents('tr').remove();
+					jthis.parents('.post').remove();
 					// 回复数 -1
 					var jposts = $('.posts');
 					jposts.html(xn.intval(jposts.html()) - 1);
@@ -169,7 +172,7 @@ $('body').on('click', '.post_reply', function() {
 	var tid = jthis.attr('tid');
 	var pid = jthis.attr('pid');
 	var jmessage = $('#message');
-	var jli = jthis.closest('li');
+	var jli = jthis.closest('.post');
 	var jadvanced_reply = $('#advanced_reply');
 	var jform = $('#quick_reply_form');
 	if(jli.hasClass('quote')) {

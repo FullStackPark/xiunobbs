@@ -402,14 +402,19 @@ function plugin_compile_srcfile($srcfile) {
 	if(!empty($conf['disabled_plugin'])) {
 		$s = file_get_contents($srcfile);
 		return $s;
-	} else {
-		// 如果有 overwrite，则用 overwrite 替换掉
-		$srcfile = plugin_find_overwrite($srcfile);
-		$s = file_get_contents($srcfile);
 	}
 	
-	$s = preg_replace('#<!--{hook\s+(.*?)}-->#', '// hook \\1', $s);
-	$s = preg_replace_callback('#//\s*hook\s+(\S+)#is', 'plugin_compile_srcfile_callback', $s);
+	// 如果有 overwrite，则用 overwrite 替换掉
+	$srcfile = plugin_find_overwrite($srcfile);
+	$s = file_get_contents($srcfile);
+	
+	// 最多支持 4 层
+	for($i=0; $i<4; $i++) {
+		if(strpos($s, '<!--{hook') !== FALSE || strpos($s, '// hook') !== FALSE) {
+			$s = preg_replace('#<!--{hook\s+(.*?)}-->#', '// hook \\1', $s);
+			$s = preg_replace_callback('#//\s*hook\s+(\S+)#is', 'plugin_compile_srcfile_callback', $s);
+		}
+	}
 	return $s;
 }
 
@@ -611,6 +616,7 @@ function plugin_read_by_dir($dir, $local_first = TRUE) {
 	$plugin['downloaded'] = isset($plugins[$dir]);
 	$plugin['stars_fmt'] = $plugin['pluginid'] ? str_repeat('<span class="icon star"></span>', $plugin['stars']) : '';
 	$plugin['user_stars_fmt'] = $plugin['pluginid'] ? str_repeat('<span class="icon star"></span>', $plugin['user_stars']) : '';
+	$plugin['is_cert_fmt'] = empty($plugin['is_cert']) ? '<span class="text-danger">'.lang('no').'</span>' : '<span class="text-success">'.lang('yes').'</span>';
 	$plugin['have_upgrade'] = $plugin['installed'] && version_compare($official['version'], $local['version']) > 0 ? TRUE : FALSE;
 	$plugin['official_version'] = $official['version']; // 官方版本
 	$plugin['img1_url'] = $official['img1'] ? PLUGIN_OFFICIAL_URL.'upload/plugin/'.$plugin['pluginid'].'/img1.jpg' : ''; // 官方版本

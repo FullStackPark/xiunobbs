@@ -3,7 +3,7 @@
 <!--{hook admin_forum_update_start.htm}-->
 
 <div class="row">
-	<div class="col-lg-10 offset-lg-1">
+	<div class="col-12">
 		<div class="card">
 			<div class="card-body">
 				<form action="<?php echo url("forum-update-$_fid");?>" method="post" id="form">
@@ -39,7 +39,7 @@
 					<div class="form-group row">
 						<label class="col-sm-2 form-control-label" for="moduids"><?php echo lang('moderator');?>：</label>
 						<div class="col-sm-10">
-							<?php echo $input['moduids'];?>
+							<?php echo $input['modnames'];?>
 							<p class="small text-muted mt-2" id="modnames"><?php echo lang('forum_moduid_format_tips');?></p>
 						</div>
 					</div>
@@ -86,7 +86,7 @@
 						<label class="col-sm-2 form-control-label"></label>
 						<div class="col-sm-10">
 							<button type="submit" class="btn btn-primary btn-block" id="submit" data-loading-text="<?php echo lang('submiting');?>..."><?php echo lang('confirm');?></button>
-							<a role="button" class="btn btn-secondary btn-block m-t-1" href="javascript:history.back();"><?php echo lang('back');?></a>
+							<a role="button" class="btn btn-secondary btn-block mt-3" href="javascript:history.back();"><?php echo lang('back');?></a>
 						</div>
 					</div>
 					<!--{hook admin_forum_update_submit_after.htm}-->
@@ -141,6 +141,7 @@ jaccesslist.find('tr').each(function(k, v) {
 });
 
 // 版主姓名：
+/*
 var jmoduids = jform.find('input[name="moduids"]');
 var jmodnames = $('#modnames');
 jmoduids.on('keyup blur', function(e) {
@@ -157,8 +158,9 @@ jmoduids.on('keyup blur', function(e) {
 		}
 	});
 });
+*/
 
-$('#nav_pc li.forum, #nav_mobile li.forum').addClass('active');
+$('#nav li.forum').addClass('active');
 </script>
 
 <!--{hook admin_forum_update_js.htm}-->

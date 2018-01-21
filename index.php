@@ -17,7 +17,7 @@
 // 本地开启 DEBUG 模式
 !isset($_SERVER['REMOTE_ADDR']) AND $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 if($_SERVER['REMOTE_ADDR'] == '127.0.0.1' || substr($_SERVER['REMOTE_ADDR'], 0, 8) == '192.168.') {
-	define('DEBUG', 0);
+	define('DEBUG', 2);
 }
 
 // 0: Production mode; 1: Developer mode; 2: Plugin developement mode;
@@ -44,7 +44,7 @@ if(DEBUG > 1) {
 }
 
 // 测试数据库连接 / try to connect database
-db_connect() OR exit($errstr);
+//db_connect() OR exit($errstr);
 
 include APP_PATH.'model/plugin.func.php';
 include _include(APP_PATH.'model.inc.php');

@@ -80,6 +80,9 @@ return array(
 	'logout_successfully'=>'Logout Sucessfully',
 	
 	'orderby'=>'Order By',
+	'thread_create_date'=>'Thread Date',
+	'post_create_date'=>'Reply Date',
+	'uploaded_attach'=>'Uploaded attach',
 	
 	// user
 	'group_0'=>'User Group',
@@ -110,6 +113,8 @@ return array(
 	'user_login'=>'User Login',
 	'user_profile'=>'User Profile',
 	'user_resetpw'=>'Reset Password',
+	'password_new'=>'New Password',
+	'password_new'=>'Repeat New Password',
 	'email_is_empty' => 'Email is empty',
 	'email_not_exists' => 'Email does not exists',
 	'username_not_exists' => 'User does not exists',
@@ -153,7 +158,8 @@ return array(
 	'link_has_expired'=>'Link has expired',
 	'please_login'=>'Please log in',
 	'send_init_pw_tips'=>'No need to verify',
-	'user_joined_thread'=>'Join Thread',
+	'user_thread'=>'Thread',
+	'user_post'=>'Post',
 	'delete_user'=>'Delete User',
 	'confirm_delete_user'=>'Sure to delete user ?',
 	'confirm_delete'=>'Sure to delete ?',
@@ -164,8 +170,9 @@ return array(
 	'modify_password' => 'Modify Password',
 	'modify_avatar' => 'Modify Avatar',
 	'my_post' => 'My Post',
-	'last_login_date' => 'Last Login Date',
-	'my_join_thread' => 'My Thread',
+	'last_login_date' => 'Last Login',
+	'my_thread' => 'My Thread',
+	'my_post' => 'My Post',
 	'repeat_password_incorrect' => 'Repeat new password is not consistent',
 	'old_password_incorrect' => 'Old password incorrect',
 	'password_modify_failed' => 'Password modification failed',
@@ -267,6 +274,14 @@ return array(
 	'lang_zh_cn'=>'简体中文',
 	'lang_zh_tw'=>'正體中文',
 	'lang_en_us'=>'English',
+	
+	'rank'=>'Rank',
+	'tag'=>'TAG',
+	'tag_cate'=>'Tag Category',
+	'tag_cate_name'=>'Tag Category Name',
+	'tag_name'=>'Tag Name',
+	
+	'toggler_menu'=>'Toggle Menu',
 	
 	// hook lang_en_us_bbs.php
 	

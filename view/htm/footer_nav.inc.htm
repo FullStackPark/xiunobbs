@@ -1,4 +1,4 @@
-<div class="text-muted small bg-dark py-4" id="footer">
+<footer class="text-muted small bg-dark py-4" id="footer">
 	<div class="container">
 		<div class="row">
 			<div class="col">
@@ -8,9 +8,9 @@
 			</div>
 			<div class="col text-right">
 				<!--{hook footer_footer_right_start.htm}-->
-					Time: <b><?php echo substr(microtime(1) - $starttime, 0, 5);?></b>, SQL: <b><?php echo count($db->sqls);?></b>
-					<!--{hook footer_footer_right_end.htm}-->
+				Processed: <b><?php echo substr(microtime(1) - $starttime, 0, 5);?></b>, SQL: <b><?php echo count($db->sqls);?></b>
+				<!--{hook footer_footer_right_end.htm}-->
 			</div>
 		</div>
 	</div>
-</div>
+</footer>

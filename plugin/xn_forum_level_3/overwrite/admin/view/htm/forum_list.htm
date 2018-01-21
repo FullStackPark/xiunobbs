@@ -30,9 +30,9 @@ ul.level3 > li > table > tr > td > a > i { color: #8bca1d;}
 		<td width="100">
 			<input type="file" multiple="multiple" accept=".jpg,.jpeg,.png,.gif,.bmp" class="form-control" :name="'icon['+forum.fid+']'" value="" :data-assoc="'img_'+forum.fid" placeholder="<?php echo lang('forum_icon');?>" /></td>
 		<td width="100">
-			<a href="javascript:void(0);" @click="new_forum(forum.fid)" v-if="level != 3" class="m-l-sm"><i class="icon-plus"></i></a>
-			<a href="javascript:void(0);" @click="delete_forum(forum.fid)" class="m-l-sm"><i class="icon-trash"></i></a>
-			<a :href="forum_edit_link(forum.fid)" class="m-l-sm"><i class="icon-gear"></i></a>
+			<a href="javascript:void(0);" @click="new_forum(forum.fid)" v-if="level != 3" class="ml-2"><i class="icon-plus"></i></a>
+			<a href="javascript:void(0);" @click="delete_forum(forum.fid)" class="ml-2"><i class="icon-trash"></i></a>
+			<a :href="forum_edit_link(forum.fid)" class="ml-2"><i class="icon-gear"></i></a>
 		</td>
 	</tr>
 </table>
@@ -67,6 +67,10 @@ ul.level3 > li > table > tr > td > a > i { color: #8bca1d;}
 <?php include _include(ADMIN_PATH.'view/htm/footer.inc.htm');?>
 
 <script src="../view/js/vue.js"></script>
+<!--[if lt IE 10]>
+<script src="../view/js/es6-shim.js"></script>
+<![endif]-->
+
 <script>
 
 var forumlist = <?php echo xn_json_encode($forumlist_show);?>;

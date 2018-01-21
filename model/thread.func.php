@@ -83,6 +83,8 @@ function thread_create($arr, &$pid) {
 		'userip'=>$longip,
 	);
 	
+	// hook model_thread__create_before.php
+	
 	$tid = thread__create($thread);
 	if($tid === FALSE) {
 		post__delete($pid);
@@ -111,6 +113,7 @@ function thread_create($arr, &$pid) {
 	forum_list_cache_delete();
 	
 	// hook model_thread_create_end.php
+	
 	return $tid;
 }
 
@@ -212,13 +215,13 @@ function thread_find($cond = array(), $orderby = array(), $page = 1, $pagesize =
 }
 
 // $order: tid/lastpid
-// 按照: 发帖时间/最后回复时间 倒序
-function thread_find_by_fid($fid, $page = 1, $pagesize = 20, $order = 'lastpid') {
+// 按照: 发帖时间/最后回复时间 倒序，不包含置顶帖
+function thread__find_by_fid($fid, $page = 1, $pagesize = 20, $order = 'lastpid') {
 	global $conf, $forumlist, $runtime;
 	$forum = $fid ? $forumlist[$fid] : array();
 	$threads = empty($forum) ? $runtime['threads'] : $forum['threads'];
 	
-	// hook model_thread_find_by_fid_start.php
+	// hook model__thread_find_by_fid_start.php
 	
 	$cond = array();
 	$fid AND $cond['fid'] = $fid;
@@ -243,16 +246,30 @@ function thread_find_by_fid($fid, $page = 1, $pagesize = 20, $order = 'lastpid')
 		$threadlist = thread_find($cond, $orderby, $page, $pagesize);
 	}
 	
+	// hook model__thread_find_by_fid_end.php
+	
+	return $threadlist;
+}
+
+// $order: tid/lastpid
+// 按照: 发帖时间/最后回复时间 倒序，包含置顶帖
+function thread_find_by_fid($fid, $page = 1, $pagesize = 20, $order = 'lastpid') {
+	global $conf, $forumlist, $runtime;
+
+	// hook model_thread_find_by_fid_start.php
+
+	$threadlist = thread__find_by_fid($fid, $page, $pagesize, $order);
+
 	// hook model_thread_find_by_fid_middle.php
 	
 	// 查找置顶帖
 	if($order == $conf['order_default'] && $page == 1) {
-		//$toplist3 = thread_top_find(0);
-		//$toplist3 = array();
-		//$toplist1 = thread_top_find($fid);
-		$toplist = thread_top_find($fid);
-		$threadlist = $toplist + $threadlist;
+		$toplist3 = thread_top_find(0);
+		$toplist1 = thread_top_find($fid);
+		//$toplist = thread_top_find($fid);
+		$threadlist = $toplist3 + $toplist1 + $threadlist;
 	}
+	
 	// hook model_thread_find_by_fid_end.php
 	return $threadlist;
 }
@@ -307,7 +324,7 @@ function thread_format(&$thread) {
 	$thread['top_class'] = $thread['top'] ? 'top_'.$thread['top'] : '';
 
 	$thread['pages'] = ceil($thread['posts'] / $conf['postlist_pagesize']);
-	
+		
 	// hook model_thread_format_end.php
 }
 

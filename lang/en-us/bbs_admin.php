@@ -5,6 +5,7 @@ return array(
 	'forum'=>'Forum',
 	'plugin'=>'Plugin',
 	'other'=>'Other',
+	'buy'=>'购买',
 	
 	'user_admin'=>'User Admin',
 	'group_admin'=>'Group Admin',
@@ -78,6 +79,7 @@ return array(
 	'host'=>'Host',
 	'port'=>'Port',
 	'account'=>'Account',
+	'smtp_host'=>'SMTP Host',
 	
 	// forum
 	'forum_list'=>'Forum List',
@@ -93,13 +95,16 @@ return array(
 	'add_new_line'=>'New Line',
 	'forum_edit_tip'=>'Please carefully edit the section, once determined, do not easily change, or may lead to data related errors, generally do not change in the formal operation.',
 	'forum_cant_delete_system_reserved'=>'Cannot delete system reserved section.',
-	'forum_moduid_format_tips'=>'Up to 10, comma separated, such as: 123456789',
+	'forum_moduid_format_tips'=>'Up to 10, comma separated, such as: ：Jack,Lisa,Mike',
 	'user_privilege'=>'User Privilege',
 	'allow_view'=>'Allow view',
 	'allow_thread'=>'Thread',
 	'allow_post'=>'Post',
 	'allow_upload'=>'Upload',
 	'allow_download'=>'Download',
+	'forum_delete_thread_before_delete_forum'=>'Please delete thread before delete forum.',
+	'forum_please_delete_sub_forum'=>'Please delete sub forum.',
+	'forum_delete_successfully'=>'Deleted successfully',
 	
 	'thread_queue_not_exists'=>'Queue does not exist',
 	'search_condition'=>'Search Condition',
@@ -171,7 +176,12 @@ return array(
 	'plugin_name_error'=>'Plugin name error',
 	'plugin_unstall_confirm_tips'=>'Uninstall will clean up the plugin data, determine the uninstall ( {name} ) it?',
 	'plugin_task_locked'=>'Another plugin task is being executed, the current task is locked.',
-	
+	'plugin_return_data_error'=>'Return data error:',
+	'plugin_is_free'=>'This plugin is free.',
+	'plugin_is_not_free'=>'This plugin is not free, please pay first.',
+	'plugin_is_bought'=>'Already bought',
+	'plugin_not_bought'=>'Not bought',
+	'plugin_wechat_qrcode_pay'=>'Wechat SCAN for Pay',
 	
 	// hook lang_en_us_bbs_admin.php
 	

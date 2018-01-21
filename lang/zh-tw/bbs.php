@@ -79,6 +79,10 @@ return array(
 	'logout_successfully'=>'退出成功',
 	
 	'orderby'=>'排序',
+	'thread_create_date'=>'發帖時間',
+	'post_create_date'=>'回帖時間',
+	
+	'uploaded_attach'=>'上傳的附件',
 	
 	// 用戶相關
 	'group_0'=>'遊客組',
@@ -109,6 +113,8 @@ return array(
 	'user_login'=>'用戶登錄',
 	'user_profile'=>'個人資料',
 	'user_resetpw'=>'重設密碼',
+	'password_new'=>'新密碼',
+	'password_new'=>'重復新密碼',
 	'email_is_empty' => '郵箱為空',
 	'email_not_exists' => '郵箱不存在',
 	'username_not_exists' => '用戶名不存在',
@@ -152,7 +158,8 @@ return array(
 	'link_has_expired'=>'鏈接已經過期',
 	'please_login'=>'請登錄',
 	'send_init_pw_tips'=>'無需驗證',
-	'user_joined_thread'=>'他參與的主題',
+	'user_thread'=>'他的主題',
+	'user_post'=>'他的帖子',
 	'delete_user'=>'刪除用戶',
 	'confirm_delete_user'=>'確定刪除用戶？',
 	'confirm_delete'=>'確定刪除？',
@@ -162,9 +169,10 @@ return array(
 	'my_profile' => '個人資料',
 	'modify_password' => '修改密碼',
 	'modify_avatar' => '修改頭像',
-	'my_post' => '我的發帖',
-	'last_login_date' => '最後登錄時間',
-	'my_join_thread' => '我的主題',
+	'my_post' => '我的帖子',
+	'last_login_date' => '最後登錄',
+	'my_thread' => '我的主題',
+	'my_post' => '我的回復',
 	'repeat_password_incorrect' => '兩次輸入的密碼不壹致',
 	'old_password_incorrect' => '舊密碼不正確',
 	'password_modify_failed' => '密碼修改失敗',
@@ -264,6 +272,14 @@ return array(
 	'lang_zh_cn'=>'簡體中文',
 	'lang_zh_tw'=>'正體中文',
 	'lang_en_us'=>'美式英語',
+		
+	'rank'=>'排序',
+	'tag'=>'標簽',
+	'tag_cate'=>'標簽分類',
+	'tag_cate_name'=>'分類名稱',
+	'tag_name'=>'標簽名稱',
+	
+	'toggler_menu'=>'展開菜單',
 	
 	// hook lang_zh_tw_bbs.php
 	

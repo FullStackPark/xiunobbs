@@ -3,7 +3,7 @@
 <!--{hook user_create_start.htm}-->
 
 <div class="row">
-	<div class="col-lg-6 offset-lg-3">
+	<div class="col-lg-6 mx-auto">
 		<!--{hook user_create_card_before.htm}-->
 		<div class="card">
 			<div class="card-header">
@@ -87,7 +87,6 @@ jsendsubmit.on('click', function() {
 	var postdata = jform.serialize();
 	$.xpost(jsendsubmit.attr('action'), postdata, function(code, message) {
 		if(code == 0) {
-			alert(message);
 			$('#password').focus();
 			var t = 60; // 倒计时
 			jsendsubmit.button('<?php echo lang('user_send_sucessfully');?> 60 ');
@@ -101,7 +100,7 @@ jsendsubmit.on('click', function() {
 				}
 			}, 1000);
 		} else if(code < 0) {
-			alert(message);
+			$.alert(message, -1);
 			jsendsubmit.button('reset');
 		} else {
 			jform.find('[name="'+code+'"]').alert(message).focus();
@@ -117,10 +116,20 @@ jform.on('submit', function() {
 	postdata.password = $.md5(postdata.password);
 	$.xpost(jform.attr('action'), postdata, function(code, message) {
 		if(code == 0) {
+			
+			// ----------> 弹出层预留
+			if(typeof arg1 != 'undefined') {
+				var jmodal = arg1;
+			}
+			if(typeof arg2 != 'undefined') {
+				var callback = arg2;
+				callback(message);
+			}
+			
 			$.alert(message);
 			jsubmit.button(message).delay(3000).location(referer);
 		} else if(code < 0) {
-			$.alert(message);
+			$.alert(message, -1);
 			jsubmit.button('reset');
 		} else {
 			jform.find('[name="'+code+'"]').alert(message).focus();
