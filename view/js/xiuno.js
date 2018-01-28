@@ -759,8 +759,8 @@ $.xget = function(url, callback, retry) {
 				if((type != 'abort' && type != 'error') || xhr.status == 403 || xhr.status == 404) {
 					return callback(-1000, "xhr.responseText:"+xhr.responseText+', type:'+type);
 				} else {
-					return callback(-1001, "xhr.responseText:"+xhr.responseText+', type:'+type);
 					console.log("xhr.responseText:"+xhr.responseText+', type:'+type);
+					return callback(-1001, "xhr.responseText:"+xhr.responseText+', type:'+type);
 				}
 			}
 		}
@@ -828,9 +828,8 @@ $.xpost = function(url, postdata, callback, progress_callback) {
 			if(type != 'abort' && type != 'error' || xhr.status == 403) {
 				return callback(-1000, "xhr.responseText:"+xhr.responseText+', type:'+type);
 			} else {
-				return callback(-1001, "xhr.responseText:"+xhr.responseText+', type:'+type);
 				console.log("xhr.responseText:"+xhr.responseText+', type:'+type);
-			}
+				return callback(-1001, "xhr.responseText:"+xhr.responseText+', type:'+type);			}
 		}
 	});
 };
