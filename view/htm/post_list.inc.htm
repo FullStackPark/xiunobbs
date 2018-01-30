@@ -6,7 +6,7 @@
 				<!--{hook post_list_inc_start.htm}-->
 
 				<?php if($postlist) { foreach($postlist as $_post) { ?>
-					<li class="media <?php echo $_post['classname'];?>" pid="<?php echo $_post['pid'];?>">
+					<li class="media <?php echo $_post['classname'];?>" data-pid="<?php echo $_post['pid'];?>" data-uid="<?php echo $_post['uid'];?>">
 						<a href="<?php echo url("user-$_post[uid]");?>" class="mr-3" tabindex="-1">
 							<img class="avatar-3" src="<?php echo $_post['user_avatar_url'];?>">
 						</a>
@@ -27,7 +27,7 @@
 								<div class="text-right text-grey">
 									<!--{hook post_list_inc_quote_before.htm}-->
 									<?php if($allowpost) { ?>
-									<a href="javascript:void(0)" tid="<?php echo $_post['tid'];?>" pid="<?php echo $_post['pid'];?>" class="text-grey post_reply mr-2"><i class="icon-reply"></i> <?php echo $_post['quote'];?></a>
+									<a href="javascript:void(0)" data-tid="<?php echo $_post['tid'];?>" data-pid="<?php echo $_post['pid'];?>" class="text-grey post_reply mr-2"><i class="icon-reply"></i> <?php echo lang('quote');?></a>
 									<?php } ?>
 									<!--{hook post_list_inc_quote_after.htm}-->
 									
@@ -45,7 +45,9 @@
 									
 									<!--{hook post_list_inc_floor_before.htm}-->
 									<?php if($_post['floor']) { ?>
-									<span class="floor mr"><?php echo $_post['floor'];?></span> <?php echo lang('floor');?>
+									<span class="floor-parent">
+										<span class="floor mr-1"><?php echo $_post['floor'];?></span> <?php echo lang('floor');?>
+									</span>
 									<?php } ?>
 									<!--{hook post_list_inc_floor_after.htm}-->
 								</div>

@@ -31,8 +31,6 @@ return array(
 	'admin_user_create'=>'Create User',
 	'admin_plugin_local_list'=>'Local Plugin',
 	'admin_plugin_official_list'=>'Official Plugin',
-	'admin_plugin_official_free_list'=>'Free Plugin',
-	'admin_plugin_official_fee_list'=>'Charge Plugin',
 	
 	'admin_token_error'=>'Admin token error, That may be your network environment is not stable, can try to unbind IP, modify file: conf.php, set admin_bind_ip = 0',
 	'admin_token_expiry'=>'Admin token expiry, please re login',
@@ -158,6 +156,7 @@ return array(
 	'pugin_cate_4'=>'Interface',
 	'pugin_cate_99'=>'Not Classfied',
 	'plugin_detail'=>'Plugin Detail',
+	'plugin_brief_url'=>'Plugin Brief URL',
 	'plugin_not_exists'=>'Plugin does not exists',
 	'plugin_versio_not_match'=>'This plugin is dependent on Xiuno BBS Minimum version {bbs_version}, current version：{version}',
 	'plugin_download_sucessfully'=>'Download plugin ({dir}) sucessfully, please click to install',
