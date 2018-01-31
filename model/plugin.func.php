@@ -65,26 +65,28 @@ function plugin_init() {
 	empty($official_plugins) AND $official_plugins = array();
 	
 	$plugin_paths = glob(APP_PATH.'plugin/*', GLOB_ONLYDIR);
-	foreach($plugin_paths as $path) {
-		$dir = file_name($path);
-		$conffile = $path."/conf.json";
-		if(!is_file($conffile)) continue;
-		$arr = xn_json_decode(file_get_contents($conffile));
-		if(empty($arr)) continue;
-		$plugins[$dir] = $arr;
-		
-		// 额外的信息
-		$plugins[$dir]['hooks'] = array();
-		$hookpaths = glob(APP_PATH."plugin/$dir/hook/*.*"); // path
-		if(is_array($hookpaths)) {
-			foreach($hookpaths as $hookpath) {
-				$hookname = file_name($hookpath);
-				$plugins[$dir]['hooks'][$hookname] = $hookpath;
+	if(is_array($plugin_paths)) {
+		foreach($plugin_paths as $path) {
+			$dir = file_name($path);
+			$conffile = $path."/conf.json";
+			if(!is_file($conffile)) continue;
+			$arr = xn_json_decode(file_get_contents($conffile));
+			if(empty($arr)) continue;
+			$plugins[$dir] = $arr;
+			
+			// 额外的信息
+			$plugins[$dir]['hooks'] = array();
+			$hookpaths = glob(APP_PATH."plugin/$dir/hook/*.*"); // path
+			if(is_array($hookpaths)) {
+				foreach($hookpaths as $hookpath) {
+					$hookname = file_name($hookpath);
+					$plugins[$dir]['hooks'][$hookname] = $hookpath;
+				}
 			}
+			
+			// 本地 + 线上数据
+			$plugins[$dir] = plugin_read_by_dir($dir);
 		}
-		
-		// 本地 + 线上数据
-		$plugins[$dir] = plugin_read_by_dir($dir);
 	}
 }
 
@@ -389,7 +391,7 @@ function plugin_paths_enabled() {
 			if(!is_file($conffile)) continue;
 			$pconf = xn_json_decode(file_get_contents($conffile));
 			if(empty($pconf)) continue;
-			if(!$pconf['enable'] || !$pconf['installed']) continue;
+			if(empty($pconf['enable']) || empty($pconf['installed'])) continue;
 			$return_paths[$path] = $pconf;
 		}
 	}
@@ -398,6 +400,7 @@ function plugin_paths_enabled() {
 
 // 编译源文件，把插件合并到该文件，不需要递归，执行的过程中 include _include() 自动会递归。
 function plugin_compile_srcfile($srcfile) {
+	global $conf;
 	// 判断是否开启插件
 	if(!empty($conf['disabled_plugin'])) {
 		$s = file_get_contents($srcfile);
@@ -602,6 +605,7 @@ function plugin_read_by_dir($dir, $local_first = TRUE) {
 	!isset($official['img2']) && $official['img2'] = 0;
 	!isset($official['img3']) && $official['img3'] = 0;
 	!isset($official['img4']) && $official['img4'] = 0;
+	!isset($official['brief_url']) && $official['brief_url'] = '';
 	
 	$local['official'] = $official;
 	

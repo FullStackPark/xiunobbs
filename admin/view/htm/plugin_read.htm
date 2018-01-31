@@ -57,6 +57,11 @@
 						<span><?php echo $plugin['is_cert_fmt']; ?></span>
 					</div>
 					
+					<div class="col-md-6">
+						<span class="text-muted"><?php echo lang('plugin_brief_url');?></span>：
+						<span><?php echo $plugin['brief_url']; ?></span>
+					</div>
+					
 					<?php  } ?>
 				</div>
 				
@@ -130,11 +135,7 @@
 <?php include _include(ADMIN_PATH.'view/htm/footer.inc.htm');?>
 
 <script>
-$('#nav li.plugin').addClass('active');
-</script>
-
-<script>
-$('#nav li.plugin').addClass('active');
+$('#nav li.nav-item-plugin').addClass('active');
 
 <?php if(!empty($plugin['pluginid']) && !empty($url)) { ?>
 
