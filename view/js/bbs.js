@@ -2,7 +2,8 @@
 $('form').keyup(function(e) {
 	var jthis = $(this);
 	if((e.ctrlKey && (e.which == 13 || e.which == 10)) || (e.altKey && e.which == 83)) {
-		jthis.trigger('submit');
+		$('#submit').focus(function(){jthis.trigger('submit');});
+		$('#submit').focus();
 		return false;
 	}
 });
