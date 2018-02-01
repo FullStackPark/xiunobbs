@@ -8,7 +8,7 @@
 <script type="text/javascript" src="plugin/xn_umeditor/umeditor/lang/zh-cn/zh-cn.js<?php echo $static_version;?>"></script>
 <script>
   if(typeof jform != 'unefined') jform.find('[name="doctype"]').val(0);
-  $('#submit').bind('focus',function(){UM.getEditor('message').execCommand('source');});
+  $('#submit').bind('focus',function(){var um=UM.getEditor('message');if(um.queryCommandState('source')){um.execCommand('source');}});
 </script>
 
 <!--{hook plugin_umeditor_js_css_after.htm}-->
