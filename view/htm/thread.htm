@@ -3,7 +3,7 @@
 <!--{hook thread_start.htm}-->
 
 <div class="row">
-	<div class="col-lg-9">
+	<div class="col-lg-9 main">
 		<!--{hook thread_breadcrumb_before.htm}-->
 		<ol class="breadcrumb d-none d-md-flex">
 			<li class="breadcrumb-item"><a href="./" aria-label="<?php echo lang('index_page');?>"><i class="icon-home"></i></a></li>
@@ -13,7 +13,7 @@
 		</ol>
 		<!--{hook thread_breadcrumb_after.htm}-->
 		
-		<div class="card">
+		<div class="card card-thread">
 			<div class="card-body">
 				<div class="media">
 					<a href="<?php echo url("user-$thread[uid]");?>" tabindex="-1">
@@ -82,7 +82,7 @@
 		
 		<!--{hook thread_postlist_before.htm}-->
 		
-		<div class="card">
+		<div class="card card-postlist">
 			<div class="card-body">
 				<div class="card-title">
 					<div class="d-flex justify-content-between">
@@ -100,7 +100,7 @@
 					
 					<?php if(!empty($user)) { ?>
 					<li class="post newpost media">
-						<a href="<?php echo url("user-$thread[uid]");?>" tabindex="-1">
+						<a href="<?php echo url("user-$user[uid]");?>" tabindex="-1">
 							<img class="avatar-3 mr-3" src="<?php echo $user['avatar_url'];?>">
 						</a>
 						<div class="media-body">
@@ -146,20 +146,23 @@
 		</div>
 		<!--{hook thread_postlist_after.htm}-->
 		
+		<div class="d-none threadlist"><input type="checkbox" name="modtid" value="<?php echo $thread['tid']; ?>" checked /></div>
+		<?php include _include(APP_PATH.'view/htm/thread_list_mod.inc.htm');?>
+		
 		<?php if($pagination) { ?>
-		<nav><ul class="pagination my-4 justify-content-center"><?php echo $pagination; ?></ul></nav>
+		<nav><ul class="pagination my-4 justify-content-center flex-wrap"><?php echo $pagination; ?></ul></nav>
 		<?php }?>
 		
 		<!--{hook thread_page_after.htm}-->
 		
-		<a role="button" class="btn btn-secondary btn-block xn-back w-50 mx-auto mb-3" href="javascript:history.back();"><?php echo lang('back');?></a>
+		<a role="button" class="btn btn-secondary btn-block xn-back col-lg-6 mx-auto mb-3" href="javascript:history.back();"><?php echo lang('back');?></a>
 		
 	</div>
-	<div class="col-lg-3 d-none d-lg-block">
+	<div class="col-lg-3 d-none d-lg-block aside">
 	
 		<a role="button" class="btn btn-primary btn-block mb-3" href="<?php echo url('thread-create-'.$fid);?>"><?php echo lang('thread_create_new');?></a>
 		
-		<div class="card">
+		<div class="card card-user-info">
 			<div class="m-3 text-center">
 				<a href="<?php echo url("user-$thread[uid]");?>" tabindex="-1">
 					<img class="avatar-5" src="<?php echo $thread['user_avatar_url'];?>">
@@ -259,7 +262,7 @@ function resize_image() {
 					jimg.css('height', 'auto');
 					jimg.css('cursor', 'pointer');
 					jimg.on('click', function() {
-						window.open(jimg.attr('src'));
+						//window.open(jimg.attr('src'));
 					});
 				} else {
 					jimg.width(jmessage_width);

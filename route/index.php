@@ -14,15 +14,23 @@ $order != 'tid' AND $order = 'lastpid';
 $pagesize = $conf['pagesize'];
 $active = 'default';
 
-$pagination = pagination(url("index-{page}"), $runtime['threads'], $page, $pagesize);
-
 // 从默认的地方读取主题列表
 $thread_list_from_default = 1;
 
 // hook index_thread_list_before.php
-
 if($thread_list_from_default) {
-	$threadlist = thread_find_by_fid($fid, $page, $pagesize, $order);
+	$fids = arrlist_values($forumlist_show, 'fid');
+	$threads = arrlist_sum($forumlist_show, 'threads');
+	$pagination = pagination(url("index-{page}"), $threads, $page, $pagesize);
+	
+	// hook thread_find_by_fids_before.php
+	$threadlist = thread_find_by_fids($fids, $page, $pagesize, $order, $threads);
+}
+
+// 查找置顶帖
+if($order == $conf['order_default'] && $page == 1) {
+	$toplist3 = thread_top_find(0);
+	$threadlist = $toplist3 + $threadlist;
 }
 
 // 过滤没有权限访问的主题 / filter no permission thread
@@ -36,10 +44,6 @@ $_SESSION['fid'] = 0;
 
 // hook index_end.php
 
-if($ajax) {
-	foreach($threadlist as &$thread) $thread = thread_safe_info($thread);
-	message(0, $threadlist);
-} else {
-	include _include(APP_PATH.'view/htm/index.htm');
-}
+include _include(APP_PATH.'view/htm/index.htm');
+
 ?>

@@ -2,8 +2,7 @@
 $('form').keyup(function(e) {
 	var jthis = $(this);
 	if((e.ctrlKey && (e.which == 13 || e.which == 10)) || (e.altKey && e.which == 83)) {
-		$('#submit').focus(function(){jthis.trigger('submit');});
-		$('#submit').focus();
+		jthis.trigger('submit');
 		return false;
 	}
 });
@@ -12,6 +11,7 @@ $('form').keyup(function(e) {
 $('.tap').on('click', function(e) {
 	var href = $(this).attr('href') || $(this).data('href');
 	if(e.target.nodeName == 'INPUT') return true;
+	if($(window).width() > 992) return;
 	if(e.ctrlKey) {
 		window.open(href);
 		return false;
@@ -34,6 +34,7 @@ $('.thread input[type="checkbox"]').parents('td').on('click', function(e) {
 })
 
 // 版主管理：删除 / moderator : delete
+/*
 $('.mod-button button.delete').on('click', function() {
 	var modtid = $('input[name="modtid"]').checked();
 	if(modtid.length == 0) return $.alert(lang.please_choose_thread);
@@ -45,8 +46,10 @@ $('.mod-button button.delete').on('click', function() {
 		});
 	});
 })
+*/
 
 // 版主管理：移动 / moderator : move
+/*
 $('.mod-button button.move').on('click', function() {
 	var modtid = $('input[name="modtid"]').checked();
 	if(modtid.length == 0) return $.alert(lang.please_choose_thread);
@@ -60,8 +63,10 @@ $('.mod-button button.move').on('click', function() {
 		});
 	}, {'body': '<p>'+lang.choose_move_forum+'：'+select+'</p>'});
 })
+*/
 
 // 版主管理：置顶
+/*
 $('.mod-button button.top').on('click', function() {
 	var modtid = $('input[name="modtid"]').checked();
 	if(modtid.length == 0) return $.alert(lang.please_choose_thread);
@@ -78,8 +83,10 @@ $('.mod-button button.top').on('click', function() {
 		});
 	}, {'body': '<p>'+lang.top_range+'：'+radios+'</p>'});
 })
+*/
 
 // 版主管理：关闭/开启
+/*
 $('.mod-button button._close').on('click', function() {
 	var modtid = $('input[name="modtid"]').checked();
 	if(modtid.length == 0) return $.alert(lang.please_choose_thread);
@@ -94,17 +101,24 @@ $('.mod-button button._close').on('click', function() {
 		});
 	}, {'body': '<p>'+lang.close_status+'：'+radios+'</p>'});
 })
+*/
 
-// 确定框 / confirm
+// 确定框 / confirm / GET / POST
+// <a href="1.php" data-confirm-text="确定删除？" class="confirm">删除</a>
+// <a href="1.php" data-method="post" data-confirm-text="确定删除？" class="confirm">删除</a>
 $('a.confirm').on('click', function() {
 	var jthis = $(this);
 	var text = jthis.data('confirm-text');
 	$.confirm(text, function() {
-		var method = jthis.data('method');
-		var href = jthis.attr('href');
+		var method = xn.strtolower(jthis.data('method'));
+		var href = jthis.data('href') || jthis.attr('href');
 		if(method == 'post') {
 			$.xpost(href, function(code, message) {
-				window.location.reload();
+				if(code == 0) {
+					window.location.reload();
+				} else {
+					alert(message);					
+				}
 			});
 		} else {
 			window.location = jthis.attr('href');
@@ -114,12 +128,14 @@ $('a.confirm').on('click', function() {
 });
 
 // 选中所有 / check all
+// <input class="checkall" data-target=".tid" />
 $('input.checkall').on('click', function() {
 	var jthis = $(this);
 	var target = jthis.data('target');
 	jtarget = $(target);
 	jtarget.prop('checked', this.checked);
 });
+
 /*
 jmobile_collapsing_bavbar = $('#mobile_collapsing_bavbar');
 jmobile_collapsing_bavbar.on('touchstart', function(e) {

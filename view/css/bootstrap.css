@@ -217,6 +217,7 @@ figure {
 img {
   vertical-align: middle;
   border-style: none;
+  max-width: 100%;
 }
 
 svg:not(:root) {
@@ -11244,7 +11245,11 @@ small, .small {
   font-weight: 400;
 }
 
-.text-grey {
+.text-small {
+  font-size: 12px;
+}
+
+.text-grey, .text-gray {
   color: rgba(134, 142, 150, 0.8) !important;
 }
 

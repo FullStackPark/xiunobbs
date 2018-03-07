@@ -3,17 +3,16 @@
 <!--{hook forum_start.htm}-->
 
 <div class="row">
-	<div class="col-lg-9">
+	<div class="col-lg-9 main">
 		<!--{hook forum_breadcrumb_before.htm}-->
 		<ol class="breadcrumb d-none d-md-flex">
 			<li class="breadcrumb-item"><a href="./"><i class="icon-home" aria-hidden="true"></i></a></li>
 			<li class="breadcrumb-item active"><a href="<?php echo url("forum-$fid");?>"><?php echo $forum['name'];?></a></li>
 			<!--{hook forum_breadcrumb.htm}-->
 		</ol>
-		
 		<!--{hook forum_breadcrumb_after.htm}-->
 				
-		<div class="card">
+		<div class="card card-threadlist">
 			<div class="card-header d-flex justify-content-between">
 				<ul class="nav nav-tabs card-header-tabs">
 					<li class="nav-item">
@@ -50,15 +49,16 @@
 		</div>
 
 		<?php include _include(APP_PATH.'view/htm/thread_list_mod.inc.htm');?>
+		
 		<!--{hook forum_page_before.htm}-->
-		<nav class="my-3"><ul class="pagination justify-content-center"><?php echo $pagination; ?></ul></nav>
+		<nav class="my-3"><ul class="pagination justify-content-center flex-wrap"><?php echo $pagination; ?></ul></nav>
 		<!--{hook forum_page_after.htm}-->
 	</div>
-	<div class="col-lg-3 d-none d-lg-block">
+	<div class="col-lg-3 d-none d-lg-block aside">
 	
 		<a role="button" class="btn btn-primary btn-block mb-3" href="<?php echo url('thread-create-'.$fid);?>"><?php echo lang('thread_create_new');?></a>
 		
-		<div class="card">
+		<div class="card card-forum-info">
 			<div class="card-body text-center">
 				<img class="logo-5 mb-2" src="<?php echo $forum['icon_url'];?>">
 				<h5><?php echo $forum['name'];?></h5>
@@ -89,7 +89,7 @@
 		
 		<!--{hook forum_mod_before.htm}-->
 		<?php if($forum['announcement'] || $forum['modlist']) { ?>
-		<div class="card">
+		<div class="card card-mod-info">
 			<div class="card-body">
 				<?php if($forum['announcement']) { ?>
 				<h6 class="card-title"><?php echo lang('forum_anouncement');?>：</h6>

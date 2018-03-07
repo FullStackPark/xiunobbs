@@ -2,6 +2,52 @@
 
 // hook model_misc_start.php
 
+
+/*
+	url("thread-create-1.htm");
+	根据 $conf['url_rewrite_on'] 设置，返回以下四种格式：
+	?thread-create-1.htm
+	thread-create-1.htm
+	?/thread/create/1
+	/thread/create/1
+*/
+function url($url, $extra = array()) {
+	$conf = _SERVER('conf');
+	!isset($conf['url_rewrite_on']) AND $conf['url_rewrite_on'] = 0;
+	
+	// hook model_url_start.php
+	
+	$r = $path = $query = '';
+	if(strpos($url, '/') !== FALSE) {
+		$path = substr($url, 0, strrpos($url, '/') + 1);
+		$query = substr($url, strrpos($url, '/') + 1);
+	} else {
+		$path = '';
+		$query = $url;
+	}
+	
+	if($conf['url_rewrite_on'] == 0) {
+		$r = $path . '?' . $query . '.htm';
+	} elseif($conf['url_rewrite_on'] == 1) {
+		$r = $path . $query . '.htm';
+	} elseif($conf['url_rewrite_on'] == 2) {
+		$r = $path . '?' . str_replace('-', '/', $query);
+	} elseif($conf['url_rewrite_on'] == 3) {
+		$r = $path . str_replace('-', '/', $query);
+	}
+	// 附加参数
+	if($extra) {
+		$args = http_build_query($extra);
+		$sep = strpos($r, '?') === FALSE ? '?' : '&';
+		$r .= $sep.$args;
+	}
+	
+	// hook model_url_end.php
+	
+	return $r;
+}
+
+
 // 检测站点的运行级别
 function check_runlevel() {
 	global $conf, $method, $gid;
@@ -33,11 +79,12 @@ function check_runlevel() {
 		> 0 一般业务逻辑错误，可以定位到具体控件，比如：用户名为空/密码为空
 */
 function message($code, $message, $extra = array()) {
-	global $ajax;
+	global $ajax, $header, $conf;
 	
 	$arr = $extra;
 	$arr['code'] = $code.'';
 	$arr['message'] = $message;
+	$header['title'] = $conf['sitename'];
 	
 	// hook model_message_start.php
 	

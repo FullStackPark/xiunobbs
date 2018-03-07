@@ -104,11 +104,18 @@ function user_read_cache($uid) {
 function user_delete($uid) {
 	global $conf, $g_static_users;
 	// hook model_user_delete_start.php
-	// 清理用户资源
+	
+	// 清理主题帖
 	$threadlist = mythread_find_by_uid($uid, 1, 1000);
 	foreach($threadlist as $thread) {
 		thread_delete($thread['tid']);
 	}
+	
+	// 清理回帖
+	post_delete_by_uid($uid);
+	
+	// 清理附件
+	attach_delete_by_uid($uid);
 	
 	$r = user__delete($uid);
 	
@@ -176,9 +183,9 @@ function user_format(&$user) {
 
 	// hook model_user_format_start.php
 	
-	$user['create_ip_fmt']   = long2ip(intval($user['create_ip']));
+	$user['create_ip_fmt']   = long2ip($user['create_ip']);
 	$user['create_date_fmt'] = empty($user['create_date']) ? '0000-00-00' : date('Y-m-d', $user['create_date']);
-	$user['login_ip_fmt']    = long2ip(intval($user['login_ip']));
+	$user['login_ip_fmt']    = long2ip($user['login_ip']);
 	$user['login_date_fmt'] = empty($user['login_date']) ? '0000-00-00' : date('Y-m-d', $user['login_date']);
 	
 	$user['groupname'] = group_name($user['gid']);

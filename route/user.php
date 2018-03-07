@@ -18,26 +18,36 @@ if(empty($action)) {
         empty($_uid) AND $_uid = $uid;
         $_user = user_read($_uid);
         
+       // empty($_user) AND message(-1, lang('user_not_exists'));
+        $header['title'] = $_user['username'];
+        $header['mobile_title'] = $_user['username'];
+
+        // hook user_index_end.php
+
+	include _include(APP_PATH.'view/htm/user.htm');
+	
+} elseif($action == 'thread') {
+
+        // hook user_thread_start.php
+
+        $_uid = param(2, 0);
+        empty($_uid) AND $_uid = $uid;
+        $_user = user_read($_uid);
+        
         empty($_user) AND message(-1, lang('user_not_exists'));
         $header['title'] = $_user['username'];
         $header['mobile_title'] = $_user['username'];
 
-        $page = param(2, 1);
+        $page = param(3, 1);
         $pagesize = 20;
         $totalnum = $_user['threads'];
-        $pagination = pagination(url("user-$_uid-{page}"), $totalnum, $page, $pagesize);
+        $pagination = pagination(url("user-thread-$_uid-{page}"), $totalnum, $page, $pagesize);
         $threadlist = mythread_find_by_uid($_uid, $page, $pagesize);
         thread_list_access_filter($threadlist, $gid);
 
-        // hook user_index_end.php
-
-        if($ajax) {
-        	$_user = user_safe_info($_user);
-                foreach($threadlist as &$thread) $thread = thread_safe_info($thread);
-                message(0, array('user'=>$_user, 'threadlist'=>$threadlist));
-        } else {
-                include _include(APP_PATH.'view/htm/user.htm');
-        }	
+        // hook user_thread_end.php
+       
+	include _include(APP_PATH.'view/htm/user_thread.htm');
 	
 } elseif($action == 'login') {
 
@@ -63,27 +73,27 @@ if(empty($action)) {
 		$password = param('password');
 		empty($email) AND message('email', lang('email_is_empty'));
 		if(is_email($email, $err)) {
-			$user = user_read_by_email($email);
-			empty($user) AND message('email', lang('email_not_exists'));
+			$_user = user_read_by_email($email);
+			empty($_user) AND message('email', lang('email_not_exists'));
 		} else {
-			$user = user_read_by_username($email);
-			empty($user) AND message('email', lang('username_not_exists'));
+			$_user = user_read_by_username($email);
+			empty($_user) AND message('email', lang('username_not_exists'));
 		}
 
 		!is_password($password, $err) AND message('password', $err);
-		md5($password.$user['salt']) != $user['password'] AND message('password', lang('password_incorrect'));
+		md5($password.$_user['salt']) != $_user['password'] AND message('password', lang('password_incorrect'));
 
 		// 更新登录时间和次数
 		// update login times
-		user_update($user['uid'], array('login_ip'=>$longip, 'login_date' =>$time , 'logins+'=>1));
+		user_update($_user['uid'], array('login_ip'=>$longip, 'login_date' =>$time , 'logins+'=>1));
 
 		// 全局变量 $uid 会在结束后，在函数 register_shutdown_function() 中存入 session (文件: model/session.func.php)
 		// global variable $uid will save to session in register_shutdown_function() (file: model/session.func.php)
-		$uid = $user['uid'];
+		$uid = $_user['uid'];
 		
 		$_SESSION['uid'] = $uid;
 		
-		user_token_set($user['uid']);
+		user_token_set($_user['uid']);
 		
 		// hook user_login_post_end.php
 		
@@ -115,14 +125,18 @@ if(empty($action)) {
 		$email = param('email');
 		$username = param('username');
 		$password = param('password');
+		$code = param('code');
 		empty($email) AND message('email', lang('please_input_email'));
 		empty($username) AND message('username', lang('please_input_username'));
 		empty($password) AND message('password', lang('please_input_password'));
 		
-		
 		if($conf['user_create_email_on']) {
-			$email != _SESSION('create_email') AND message('sendinitpw', lang('click_to_get_init_pw'));
-			$password != md5(_SESSION('create_pw')) AND message('password', lang('init_pw_incorrect'));
+			$sess_email = _SESSION('user_create_email');
+			$sess_code = _SESSION('user_create_code');
+			empty($sess_code) AND message('code', 'click_to_get_verify_code');
+			empty($sess_email) AND message('code', 'click_to_get_verify_code');
+			$email != $sess_email AND message('code', lang('verify_code_incorrect'));
+			$code != $sess_code AND message('code', lang('verify_code_incorrect'));
 		}
 		
 		!is_email($email, $err) AND message('email', $err);
@@ -131,14 +145,14 @@ if(empty($action)) {
 		
 		!is_username($username, $err) AND message('username', $err);
 		$_user = user_read_by_username($username);
-		$_user AND message('email', lang('username_is_in_use'));
+		$_user AND message('username', lang('username_is_in_use'));
 		
 		!is_password($password, $err) AND message('password', $err);
 		
 		$salt = xn_rand(16);
 		$pwd = md5($password.$salt);
 		$gid = 101;
-		$user = array (
+		$_user = array (
 			'username' => $username,
 			'email' => $email,
 			'password' => $pwd,
@@ -150,14 +164,14 @@ if(empty($action)) {
 			'login_date' => $time,
 			'login_ip' => $longip,
 		);
-		$uid = user_create($user);
+		$uid = user_create($_user);
 		$uid === FALSE AND message('email', lang('user_create_failed'));
 		$user = user_read($uid);
 	
 		// 更新 session
 		
-		unset($_SESSION['create_email']);
-		unset($_SESSION['create_pw']);
+		unset($_SESSION['user_create_email']);
+		unset($_SESSION['user_create_code']);
 		$_SESSION['uid'] = $uid;
 		user_token_set($uid);
 		
@@ -166,40 +180,6 @@ if(empty($action)) {
 		// hook user_create_post_end.php
 		
 		message(0, lang('user_create_sucessfully'), $extra);
-	}
-
-} elseif($action == 'sendinitpw') {
-	
-	// hook user_sendinitpw_start.php
-	 
-	empty($conf['user_create_email_on']) AND message(-1, lang('email_verify_not_on'));
-	
-	$smtplist = include _include(APP_PATH.'conf/smtp.conf.php');
-	$n = array_rand($smtplist);
-	$smtp = $smtplist[$n];
-		
-	$email = param('email');
-	!is_email($email, $err) AND message('email', $err);
-	$r = user_read_by_email($email);
-	$r AND message('email', lang('email_is_in_use'));
-	
-	$rand = rand(100000, 999999);
-	
-	$_SESSION['create_email'] = $email;
-	$_SESSION['create_pw'] = $rand;
-	
-	$subject = lang('email_create_init_pw_template', array('rand'=>$rand, 'sitename'=>$conf['sitename']));
-	$message = $subject;
-	
-	// hook user_sendinitpw_sendmail_before.php
-	$r = xn_send_mail($smtp, $conf['sitename'], $email, $subject, $message);
-	// hook user_sendinitpw_sendmail_after.php
-	
-	if($r === TRUE) {
-		message(0, lang('user_send_init_pw_sucessfully'));
-	} else {
-		xn_log($errstr, 'send_mail_error');
-		message(-1, $errstr);
 	}
 	
 } elseif($action == 'logout') {
@@ -220,11 +200,13 @@ if(empty($action)) {
 	
 	// hook user_resetpw_get_post.php
 	
+	!$conf['user_resetpw_on'] AND message(-1, '未开启密码找回功能！');
+		
 	if($method == 'GET') {
 
 		// hook user_resetpw_get_start.php
 		
-		$header['title'] = lang('reset_pw');
+		$header['title'] = lang('resetpw');
 		
 		// hook user_resetpw_get_end.php
 		
@@ -237,75 +219,34 @@ if(empty($action)) {
 		$email = param('email');
 		empty($email) AND message('email', lang('please_input_email'));
 		!is_email($email, $err) AND message('email', $err);
-		$user = user_read_by_email($email);
-		!$user AND message('email', lang('email_is_not_in_use'));
 		
-		$verify_code = param('verify_code');
-		empty($verify_code) AND message('verify_code', lang('please_input_verify_code'));
+		$_user = user_read_by_email($email);
+		!$_user AND message('email', lang('email_is_not_in_use'));
+
+		$code = param('code');
+		empty($code) AND message('code', lang('please_input_verify_code'));
 		
-		$resetpw_email = _SESSION('resetpw_email');
-		$resetpw_verify_code = _SESSION('resetpw_verify_code');
-		(!$resetpw_email || !$resetpw_verify_code) AND message('verify_code', lang('click_to_get_verify_code'));
-		
-		$resetpw_verify_times = intval(_SESSION('resetpw_verify_times'));
-		$resetpw_verify_lastdate = intval(_SESSION('resetpw_verify_lastdate'));
-		$times = 10;
-		if($resetpw_verify_times > $times && $time - $resetpw_verify_lastdate < 3600) {
-			message('verify_code', lang('verify_code_try_too_frequently', $times));
-		}
-		if($resetpw_verify_code != $verify_code) {
-			$resetpw_verify_times++;
-			$_SESSION['resetpw_verify_times'] = $resetpw_verify_times;
-			$resetpw_verify_lastdate && $time - $resetpw_verify_lastdate > 3600 && $_SESSION['resetpw_verify_lastdate'] = $time;
-			message('verify_code', lang('verify_code_incorrect'));
-		} else {
-			$_SESSION['resetpw_verify_ok'] = 1;
-		}
+		$sess_email = _SESSION('user_resetpw_email');
+		$sess_code = _SESSION('user_resetpw_code');
+		empty($sess_code) AND message('code', 'click_to_get_verify_code');
+		empty($sess_email) AND message('code', 'click_to_get_verify_code');
+		$email != $sess_email AND message('code', lang('verify_code_incorrect'));
+		$code != $sess_code AND message('code', lang('verify_code_incorrect'));
+	
+		$_SESSION['resetpw_verify_ok'] = 1;
 		
 		// hook user_resetpw_post_end.php
 		
 		message(0, lang('check_ok_to_next_step'));
 	}
 
-// 重设密码第 2 步 | reset password step 2
-} elseif($action == 'resetpw_sendcode') {
-	
-	// hook user_sendreset_start.php
-	
-	!$conf['user_resetpw_on'] AND message(-1, lang('reset_pw_not_on'));
-	$method != 'POST' AND message(-1, lang('method_error'));
-	$email = param('email');
-	empty($email) AND message('email', lang('email_is_empty'));
-	!is_email($email, $err) AND message('email', $err);
-	$r = user_read_by_email($email);
-	!$r AND message('email', lang('email_is_not_in_use'));
-	
-	// 发送邮件 | send mail
-	$smtplist = include _include(APP_PATH.'conf/smtp.conf.php');
-	$n = array_rand($smtplist);
-	$smtp = $smtplist[$n];
-	$rand = rand(100000, 999999);
-	$_SESSION['resetpw_email'] = $email;
-	$_SESSION['resetpw_verify_code'] = $rand;
-	$subject = lang('reset_pw_email_template', array('rand'=>$rand, 'sitename'=>$conf['sitename']));
-	$message = $subject;
-	// hook user_sendreset_send_mail_before.php
-	$r = xn_send_mail($smtp, $conf['sitename'], $email, $subject, $message);
-	// hook user_sendreset_send_mail_after.php
-	if($r === TRUE) {
-		message(0, lang('send_successfully'));
-	} else {
-		xn_log($errstr, 'send_mail_error');
-		message(-1, $errstr);
-	}
-	
 // 重设密码第 3 步 | reset password step 3
 } elseif($action == 'resetpw_complete') {
 	
 	// hook user_resetpw_get_post.php
 	
 	// 校验数据
-	$email = _SESSION('resetpw_email');
+	$email = _SESSION('user_resetpw_email');
 	$resetpw_verify_ok = _SESSION('resetpw_verify_ok');
 	(empty($email) || empty($resetpw_verify_ok)) AND message(-1, lang('data_empty_to_last_step'));
 	
@@ -317,7 +258,7 @@ if(empty($action)) {
 
 		// hook user_resetpw_get_start.php
 		
-		$header['title'] = lang('reset_pw');
+		$header['title'] = lang('resetpw');
 		
 		// hook user_resetpw_get_end.php
 		
@@ -336,16 +277,78 @@ if(empty($action)) {
 		
 		!is_password($password, $err) AND message('password', $err);
 		
-		unset($_SESSION['resetpw_email']);
-		unset($_SESSION['resetpw_verify_code']);
-		unset($_SESSION['resetpw_verify_times']);
-		unset($_SESSION['resetpw_verify_lastdate']);
+		unset($_SESSION['user_resetpw_email']);
+		unset($_SESSION['user_resetpw_code']);
 		unset($_SESSION['resetpw_verify_ok']);
 		
 		// hook user_resetpw_post_end.php
 		
 		message(0, lang('modify_successfully'));
 		
+	}
+
+// 发送验证码
+} elseif($action == 'send_code') {
+	
+	$method != 'POST' AND message(-1, lang('method_error'));
+	
+	// hook user_sendcode_start.php
+	
+	$action2 = param(2);
+	
+	// 创建用户
+	if($action2 == 'user_create') {
+		
+		$email = param('email');
+		
+		empty($email) AND message('email', lang('please_input_email'));
+		!is_email($email, $err) AND message('email', $err);
+		empty($conf['user_create_email_on']) AND message(-1, lang('email_verify_not_on'));
+		$_user = user_read_by_email($email);
+		!empty($_user) AND message('email', lang('email_is_in_use'));
+		
+		$code = rand(100000, 999999);
+		$_SESSION['user_create_email'] = $email;
+		$_SESSION['user_create_code'] = $code;
+		
+	
+	// 重置密码，往老地址发送
+	} elseif($action2 == 'user_resetpw') {
+		
+		$email = param('email');
+		
+		empty($email) AND message('email', lang('please_input_email'));
+		!is_email($email, $err) AND message('email', $err);
+		$_user = user_read_by_email($email);
+		empty($_user) AND message('email', lang('email_is_not_in_use'));
+		
+		empty($conf['user_resetpw_on']) AND message(-1, lang('resetpw_not_on'));
+		
+		$code = rand(100000, 999999);
+		$_SESSION['user_resetpw_email'] = $email;
+		$_SESSION['user_resetpw_code'] = $code;
+
+	} else {
+		message(-1, 'action2 error');
+	}
+	
+	
+	$subject = lang('send_code_template', array('rand'=>$code, 'sitename'=>$conf['sitename']));
+	$message = $subject;
+	
+	$smtplist = include _include(APP_PATH.'conf/smtp.conf.php');
+	$n = array_rand($smtplist);
+	$smtp = $smtplist[$n];
+	
+	// hook user_send_code_before.php
+	$r = xn_send_mail($smtp, $conf['sitename'], $email, $subject, $message);
+	// hook user_send_code_after.php
+	
+	if($r === TRUE) {
+		message(0, lang('send_successfully'));
+	} else {
+		xn_log($errstr, 'send_mail_error');
+		message(-1, $errstr);
 	}
 
 // 简单的同步登陆实现：| sync login implement simply
@@ -390,53 +393,6 @@ if(empty($action)) {
 		http_location($url);
 	}
 
-} elseif($action == 'post') {
-	
-	// hook user_post_start.php
-	
-	$_uid = param(2, 0);
-	$_user = user_read($_uid);
-	
-	$page = param(3, 1);
-	$pagesize = 20;
-	$totalnum = $_user['posts'];
-	$pagination = pagination(url("user-post-$_uid-{page}"), $totalnum, $page, $pagesize);
-	$postlist = post_find_by_uid($_uid, $page, $pagesize);
-	
-	post_list_access_filter($postlist, $gid);
-	
-	// hook user_post_end.php
-	
-	$active = 'thread';
-	include _include(APP_PATH.'view/htm/user_post.htm');
-
-/*
-// 用户发表的主题
-} elseif($action == 'thread') {
-	
-	// hook user_thread_start.php
-	
-	$_uid = param(2, 0);
-	empty($_uid) AND $_uid = $uid;
-	$_user = user_read($_uid);
-	
-	$page = param(3, 1);
-	$pagesize = 20;
-	$totalnum = $_user['threads'];
-	$pagination = pagination(url("user-thread-$_uid-{page}"), $totalnum, $page, $pagesize);
-	$threadlist = mythread_find_by_uid($_uid, $page, $pagesize);
-	thread_list_access_filter($threadlist, $gid);
-	
-	// hook user_thread_end.php
-	
-	$active = 'thread';
-	if($ajax) {
-		foreach($threadlist as &$thread) $thread = thread_safe_info($thread);
-		message(0, $threadlist);
-	} else {
-		include _include(APP_PATH.'view/htm/user_thread.htm');
-	}
-*/	
 } else {
 	
 }

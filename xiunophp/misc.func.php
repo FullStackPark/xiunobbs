@@ -92,6 +92,7 @@ function param_word($key, $len = 32) {
 
 function param_base64($key, $len = 0) {
 	$s = param($key, '', FALSE);
+	if(empty($s)) return '';
 	$s = substr($s, strpos($s, ',') + 1);
 	$s = base64_decode($s);
 	$len AND $s = substr($s, 0, $len);
@@ -100,6 +101,7 @@ function param_base64($key, $len = 0) {
 
 function param_json($key) {
 	$s = param($key, '', FALSE);
+	if(empty($s)) return '';
 	$arr = xn_json_decode($s);
 	return $arr;
 }
@@ -534,6 +536,8 @@ function ip() {
 	} else {
 		if(isset($_SERVER['HTTP_CDN_SRC_IP'])) {
 			$ip = $_SERVER['HTTP_CDN_SRC_IP'];
+		} elseif(isset($_SERVER['HTTP_CLIENTIP'])) {
+			$ip = $_SERVER['HTTP_CLIENTIP'];
 		} elseif(isset($_SERVER['HTTP_CLIENT_IP'])) {
 			$ip = $_SERVER['HTTP_CLIENT_IP'];
 		} elseif(isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
@@ -576,7 +580,7 @@ function ip() {
 
 // 日志记录
 function xn_log($s, $file = 'error') {
-	if(DEBUG == 0) return;
+	if(DEBUG == 0 && strpos($file, 'error') === FALSE) return;
 	$time = $_SERVER['time'];
 	$ip = $_SERVER['ip'];
 	$conf = _SERVER('conf');
@@ -1039,46 +1043,6 @@ function http_url_path() {
 	$http = (($port == 443) || $proto == 'https' || ($https && $https != 'off')) ? 'https' : 'http';
 	return  "$http://$host$path/";
 }
-
-/*
-	url("thread-create-1.htm");
-	根据 $conf['url_rewrite_on'] 设置，返回以下四种格式：
-	?thread-create-1.htm
-	thread-create-1.htm
-	?/thread/create/1
-	/thread/create/1
-*/
-function url($url, $extra = array()) {
-	$conf = _SERVER('conf');
-	!isset($conf['url_rewrite_on']) AND $conf['url_rewrite_on'] = 0;
-	$r = $path = $query = '';
-	if(strpos($url, '/') !== FALSE) {
-		$path = substr($url, 0, strrpos($url, '/') + 1);
-		$query = substr($url, strrpos($url, '/') + 1);
-	} else {
-		$path = '';
-		$query = $url;
-	}
-	
-	if($conf['url_rewrite_on'] == 0) {
-		$r = $path . '?' . $query . '.htm';
-	} elseif($conf['url_rewrite_on'] == 1) {
-		$r = $path . $query . '.htm';
-	} elseif($conf['url_rewrite_on'] == 2) {
-		$r = $path . '?' . str_replace('-', '/', $query);
-	} elseif($conf['url_rewrite_on'] == 3) {
-		$r = $path . str_replace('-', '/', $query);
-	}
-	// 附加参数
-	if($extra) {
-		$args = http_build_query($extra);
-		$sep = strpos($r, '?') === FALSE ? '?' : '&';
-		$r .= $sep.$args;
-	}
-	
-	return $r;
-}
-
 
 /**
  * URL format: http://www.domain.com/demo/?user-login.htm?a=b&c=d

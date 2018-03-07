@@ -12,7 +12,7 @@ function db_new($dbconf) {
 			case 'pdo_mysql':  $db = new db_pdo_mysql($dbconf['pdo_mysql']);	break;
 			case 'pdo_sqlite': $db = new db_pdo_sqlite($dbconf['pdo_sqlite']);	break;
 			case 'pdo_mongodb': $db = new db_pdo_mongodb($dbconf['pdo_mongodb']);	break;
-			default: xn_message(-1, 'Not suppported db type:'.$dbconf['type']);
+			default: return xn_error(-1, 'Not suppported db type:'.$dbconf['type']);
 		}
 		if(!$db || ($db && $db->errstr)) {
 			$errno = -1;
@@ -52,7 +52,7 @@ function db_sql_find_one($sql, $d = NULL) {
 	if(!$d) return FALSE;
 	$arr = $d->sql_find_one($sql);
 	
-	db_errno_errstr($arr, $d);
+	db_errno_errstr($arr, $d, $sql);
 	
 	return $arr;
 }
@@ -63,7 +63,7 @@ function db_sql_find($sql, $key = NULL, $d = NULL) {
 	if(!$d) return FALSE;
 	$arr = $d->sql_find($sql, $key);
 	
-	db_errno_errstr($arr, $d);
+	db_errno_errstr($arr, $d, $sql);
 	
 	return $arr;
 }
@@ -81,7 +81,7 @@ function db_exec($sql, $d = NULL) {
 	
 	$n = $d->exec($sql);
 	
-	db_errno_errstr($n, $d);
+	db_errno_errstr($n, $d, $sql);
 	
 	return $n;
 }
@@ -198,12 +198,12 @@ function db_find_one($table, $cond = array(), $orderby = array(), $col = array()
 }
 
 // 保存 $db 错误到全局
-function db_errno_errstr($r, $d = NULL) {
+function db_errno_errstr($r, $d = NULL, $sql = '') {
 	global $errno, $errstr;
 	if($r === FALSE) { //  && $d->errno != 0
 		$errno = $d->errno;
 		$errstr = db_errstr_safe($errno, $d->errstr);
-		$s = "sql errno: ".$errno.", errstr: ".$errstr;
+		$s = 'SQL:'.$sql."\r\nerrno: ".$errno.", errstr: ".$errstr;
 		xn_log($s, 'db_error');
 	}
 }

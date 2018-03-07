@@ -178,6 +178,14 @@ function post_delete_by_tid($tid) {
 	return count($postlist);
 }
 
+// 此处有可能会超时，并且导致统计不准确，需要重建统计数
+function post_delete_by_uid($uid) {
+	// hook model_post_delete_by_uid_start.php
+	$r = db_delete('post', array('uid'=>$uid));
+	// hook model_post_delete_by_uid_end.php
+	return $r;
+}
+
 function post_find($cond = array(), $orderby = array(), $page = 1, $pagesize = 20) {
 	// hook model_post_find_start.php
 	$postlist = post__find($cond, $orderby, $page, $pagesize);
@@ -209,35 +217,6 @@ function post_find_by_tid($tid, $page = 1, $pagesize = 50) {
 	// hook model_post_find_by_tid_end.php
 	return $postlist;
 }
-
-// 此处有缓存，是否有必要？
-function post_find_by_uid($uid, $page = 1, $pagesize = 50) {
-	global $conf;
-	
-	// hook model_post_find_by_uid_start.php
-	
-	db_find('post', array('uid'=>$uid), array('pid'=>-1), $page, $pagesize, '', array('pid'));
-	$arrlist = db_find('post', array('uid'=>$uid), array('pid'=>-1), $page, $pagesize, '', array('pid'));
-	$pids = arrlist_values($arrlist, 'pid');
-	$postlist = post_find_by_pids($pids);
-	$postlist = arrlist_multisort($postlist, 'pid', FALSE);
-	
-	foreach($postlist as $k=>&$post) {
-		user_post_message_format($post['message_fmt']);
-		$post['filelist'] = array();
-		$post['floor'] = 0; // 默认
-		$thread = thread_read_cache($post['tid']);
-		$post['subject'] = $thread['subject'];
-		// 干掉主题帖
-		if($post['isfirst']) {
-			//unset($postlist[$k]);
-		}
-	}
-	
-	// hook model_post_find_by_uid_end.php
-	return $postlist;
-}
-
 
 // <img src="/view/img/face/1.gif"/>
 // <blockquote class="blockquote">
@@ -334,7 +313,7 @@ function post_file_list_html($filelist, $include_delete = FALSE) {
 }
 
 function post_format(&$post) {
-	global $conf, $uid, $sid, $longip;
+	global $conf, $uid, $sid, $gid, $longip;
 	if(empty($post)) return;
 	$post['create_date_fmt'] = humandate($post['create_date']);
 	
@@ -347,9 +326,11 @@ function post_format(&$post) {
 	$post['user'] = $user ? $user : user_guest();
 	!isset($post['floor']) AND  $post['floor'] = '';
 	
+	$thread = thread_read_cache($post['tid']);
+	
 	// 权限判断
-	$post['allowupdate'] = ($uid == $post['uid']);
-	$post['allowdelete'] = ($uid == $post['uid']);
+	$post['allowupdate'] = ($uid == $post['uid']) || forum_access_mod($thread['fid'], $gid, 'allowupdate');
+	$post['allowdelete'] = ($uid == $post['uid']) || forum_access_mod($thread['fid'], $gid, 'allowdelete');
 	
 	$post['user_url'] = url("user-$post[uid]".($post['uid'] ? '' : "-$post[pid]"));
 	

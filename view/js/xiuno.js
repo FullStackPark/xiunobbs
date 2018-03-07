@@ -1,5 +1,6 @@
 /*
-* xiuno.js 4.0，命名空间放弃 window（容易冲突），默认使用 xn.
+* xiuno.js 封装了部分 PHP 常用的函数，便于代码移植和使用。
+* 技术支持： http://bbs.xiuno.com/
 */
 
 /********************* 对 window 对象进行扩展 ************************/
@@ -389,7 +390,7 @@ xn.is_email = function(s) {
 xn.is_string = function(obj) {return Object.prototype.toString.apply(obj) == '[object String]';};
 xn.is_function = function(obj) {return Object.prototype.toString.apply(obj) == '[object Function]';};
 xn.is_array = function(obj) {return Object.prototype.toString.apply(obj) == '[object Array]';};
-xn.is_number = function(obj) {return Object.prototype.toString.apply(obj) == '[object Number]';};
+xn.is_number = function(obj) {return Object.prototype.toString.apply(obj) == '[object Number]' || /^\d+$/.test(obj);};
 xn.is_regexp = function(obj) {return Object.prototype.toString.apply(obj) == '[object RegExp]';};
 xn.is_object = function(obj) {return Object.prototype.toString.apply(obj) == '[object Object]';};
 xn.is_element = function(obj) {return !!(obj && obj.nodeType === 1);};
@@ -942,7 +943,7 @@ $.fn.base64_encode_file = function(width, height, action) {
 	var jsubmit = jform.find('input[type="submit"]');
 	jform.on('change', 'input[type="file"]', function(e) {
 		var jfile = $(this);
-		var jassoc = $('#'+jfile.data('assoc'));
+		var jassoc = jfile.data('assoc') ? $('#'+jfile.data('assoc')) : null;
 		var obj = e.target;
 		jsubmit.button('disabled');
 		var file = obj.files[0];
@@ -958,7 +959,7 @@ $.fn.base64_encode_file = function(width, height, action) {
 			if(width && height && xn.substr(this.result, 0, 10) == 'data:image') {
 				xn.image_resize(this.result, function(code, message) {
 					if(code == 0) {
-						jassoc.attr('src', message.data);
+						if(jassoc) jassoc.attr('src', message.data);
 						jhidden.val(message.data); // base64
 					} else {
 						alert(message);
@@ -966,7 +967,7 @@ $.fn.base64_encode_file = function(width, height, action) {
 					jsubmit.button('reset');
 				}, {width: width, height: height, action: action});
 			} else {
-				jassoc.attr('src', this.result);
+				if(jassoc) jassoc.attr('src', this.result);
 				jhidden.val(this.result);
 				jsubmit.button('reset');
 			}

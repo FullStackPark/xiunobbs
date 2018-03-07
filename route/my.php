@@ -22,23 +22,9 @@ if(empty($action)) {
 	
 	$header['title'] = lang('my_home');
 	
-	$page = param(1, 1);
-	$pagesize = 20;
-	$totalnum = $user['threads'];
 	
-	// hook my_profile_thread_list_before.php
 	
-	$pagination = pagination(url('my-{page}'), $totalnum, $page, $pagesize);
-	$threadlist = mythread_find_by_uid($uid, $page, $pagesize);
-	
-	// hook my_thread_end.php
-	if($ajax) {
-		$user = user_safe_info($user);
-		foreach($threadlist as &$thread) $thread = thread_safe_info($thread);
-		 message(0, array('user'=>$user, 'threadlist'=>$threadlist));
-	} else {
-		include _include(APP_PATH.'view/htm/my.htm');
-	}
+	include _include(APP_PATH.'view/htm/my.htm');
 	
 /*	
 } elseif($action == 'profile') {
@@ -77,7 +63,7 @@ if(empty($action)) {
 		
 	}
 	
-/*
+
 } elseif($action == 'thread') {
 
 	// hook my_thread_start.php
@@ -85,46 +71,16 @@ if(empty($action)) {
 	$page = param(2, 1);
 	$pagesize = 20;
 	$totalnum = $user['threads'];
-	$thread_list_from_default = 1;
 	
 	// hook my_profile_thread_list_before.php
 	
-	if($thread_list_from_default) {
-		$pagination = pagination(url('my-thread-{page}'), $totalnum, $page, $pagesize);
-		$threadlist = mythread_find_by_uid($uid, $page, $pagesize);
-	}
+	$pagination = pagination(url('my-thread-{page}'), $totalnum, $page, $pagesize);
+	$threadlist = mythread_find_by_uid($uid, $page, $pagesize);
 	
 	// hook my_thread_end.php
-	if($ajax) {
-		foreach($threadlist as &$thread) $thread = thread_safe_info($thread);
-		message(0, $threadlist);
-	} else {
-		include _include(APP_PATH.'view/htm/my_thread.htm');
-	}
-*/
+	
+	include _include(APP_PATH.'view/htm/my_thread.htm');
 
-} elseif($action == 'post') {
-	
-	// hook my_post_start.php
-	
-	$page = param(2, 1);
-	$pagesize = 20;
-	
-	$totalnum = $user['posts'];
-	$pagination = pagination(url("my-post-{page}"), $totalnum, $page, $pagesize);
-	$postlist = post_find_by_uid($uid, $page, $pagesize);
-	
-	post_list_access_filter($postlist, $gid);
-
-	// hook my_post_end.php
-	
-	$active = 'thread';
-	if($ajax) {
-		foreach($postlist as &$postlist) $post = post_safe_info($post);
-		message(0, $postlist);
-	} else {
-		include _include(APP_PATH.'view/htm/my_post.htm');
-	}
 	
 } elseif($action == 'avatar') {
 	
